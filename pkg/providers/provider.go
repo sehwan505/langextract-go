@@ -8,13 +8,13 @@ import (
 // This mirrors the BaseLanguageModel abstract class from the Python implementation.
 type BaseLanguageModel interface {
 	// Infer generates model output for the given prompts
-	Infer(ctx context.Context, prompts []string, options map[string]interface{}) ([][]ScoredOutput, error)
+	Infer(ctx context.Context, prompts []string, options map[string]any) ([][]ScoredOutput, error)
 	
 	// ParseOutput processes raw model output into structured format
-	ParseOutput(output string) (interface{}, error)
+	ParseOutput(output string) (any, error)
 	
 	// ApplySchema applies schema constraints to the model
-	ApplySchema(schema interface{})
+	ApplySchema(schema any)
 	
 	// SetFenceOutput configures whether output should be fenced (e.g., ```json)
 	SetFenceOutput(enabled bool)
@@ -37,7 +37,7 @@ type ScoredOutput struct {
 type ModelConfig struct {
 	ModelID         string                 `json:"model_id"`
 	Provider        string                 `json:"provider,omitempty"`
-	ProviderKwargs  map[string]interface{} `json:"provider_kwargs,omitempty"`
+	ProviderKwargs  map[string]any `json:"provider_kwargs,omitempty"`
 	Temperature     float64                `json:"temperature,omitempty"`
 	MaxTokens       int                    `json:"max_tokens,omitempty"`
 	TopP            float64                `json:"top_p,omitempty"`
@@ -62,7 +62,7 @@ func (c *ModelConfig) WithProvider(provider string) *ModelConfig {
 }
 
 // WithProviderKwargs sets provider-specific arguments.
-func (c *ModelConfig) WithProviderKwargs(kwargs map[string]interface{}) *ModelConfig {
+func (c *ModelConfig) WithProviderKwargs(kwargs map[string]any) *ModelConfig {
 	c.ProviderKwargs = kwargs
 	return c
 }

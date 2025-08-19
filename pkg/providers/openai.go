@@ -18,7 +18,7 @@ type OpenAIProvider struct {
 	apiKey      string
 	baseURL     string
 	client      *http.Client
-	schema      interface{}
+	schema      any
 	fenceOutput bool
 }
 
@@ -91,7 +91,7 @@ func NewOpenAIProvider(config *ModelConfig) (BaseLanguageModel, error) {
 }
 
 // Infer generates model output for the given prompts.
-func (p *OpenAIProvider) Infer(ctx context.Context, prompts []string, options map[string]interface{}) ([][]ScoredOutput, error) {
+func (p *OpenAIProvider) Infer(ctx context.Context, prompts []string, options map[string]any) ([][]ScoredOutput, error) {
 	results := make([][]ScoredOutput, len(prompts))
 	
 	for i, prompt := range prompts {
@@ -161,9 +161,9 @@ func (p *OpenAIProvider) generateCompletion(ctx context.Context, prompt string) 
 }
 
 // ParseOutput processes raw model output into structured format.
-func (p *OpenAIProvider) ParseOutput(output string) (interface{}, error) {
+func (p *OpenAIProvider) ParseOutput(output string) (any, error) {
 	// Try to parse as JSON first
-	var result interface{}
+	var result any
 	
 	// Remove code fences if present
 	cleanOutput := p.cleanOutput(output)
@@ -198,7 +198,7 @@ func (p *OpenAIProvider) cleanOutput(output string) string {
 }
 
 // ApplySchema applies schema constraints to the model.
-func (p *OpenAIProvider) ApplySchema(schema interface{}) {
+func (p *OpenAIProvider) ApplySchema(schema any) {
 	p.schema = schema
 }
 

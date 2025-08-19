@@ -145,3 +145,190 @@ func (m *MockProvider) GetModelID() string {
 func (m *MockProvider) IsAvailable() bool {
 	return true
 }
+
+func TestGeminiProviderCreation(t *testing.T) {
+	config := NewModelConfig("gemini-2.5-flash").
+		WithProvider("gemini").
+		WithProviderKwargs(map[string]interface{}{
+			"api_key": "test-gemini-key",
+		})
+	
+	provider, err := NewGeminiProvider(config)
+	if err != nil {
+		t.Fatalf("NewGeminiProvider() error = %v", err)
+	}
+	
+	if provider.GetModelID() != "gemini-2.5-flash" {
+		t.Errorf("GetModelID() = %q, want 'gemini-2.5-flash'", provider.GetModelID())
+	}
+	
+	if !provider.IsAvailable() {
+		t.Error("IsAvailable() should return true when API key is provided")
+	}
+}
+
+func TestGeminiProviderWithoutAPIKey(t *testing.T) {
+	config := NewModelConfig("gemini-2.5-flash").WithProvider("gemini")
+	
+	_, err := NewGeminiProvider(config)
+	if err == nil {
+		t.Error("NewGeminiProvider() should return error when no API key is provided")
+	}
+}
+
+func TestGeminiProviderParseOutput(t *testing.T) {
+	config := NewModelConfig("gemini-2.5-flash").
+		WithProvider("gemini").
+		WithProviderKwargs(map[string]interface{}{
+			"api_key": "test-key",
+		})
+	
+	provider, err := NewGeminiProvider(config)
+	if err != nil {
+		t.Fatalf("NewGeminiProvider() error = %v", err)
+	}
+	
+	// Test JSON parsing
+	jsonOutput := `{"name": "test", "value": 123}`
+	parsed, err := provider.ParseOutput(jsonOutput)
+	if err != nil {
+		t.Fatalf("ParseOutput() error = %v", err)
+	}
+	
+	result, ok := parsed.(map[string]interface{})
+	if !ok {
+		t.Error("ParseOutput() should return map[string]interface{} for valid JSON")
+	}
+	
+	if result["name"] != "test" {
+		t.Errorf("ParseOutput() name = %v, want 'test'", result["name"])
+	}
+	
+	// Test non-JSON parsing
+	textOutput := "plain text"
+	parsed, err = provider.ParseOutput(textOutput)
+	if err != nil {
+		t.Fatalf("ParseOutput() error = %v", err)
+	}
+	
+	if parsed != textOutput {
+		t.Errorf("ParseOutput() = %v, want %v", parsed, textOutput)
+	}
+}
+
+func TestOllamaProviderCreation(t *testing.T) {
+	config := NewModelConfig("llama3.2").
+		WithProvider("ollama").
+		WithProviderKwargs(map[string]interface{}{
+			"base_url": "http://localhost:11434",
+		})
+	
+	// Note: This will fail if Ollama is not running, but we can still test the basic creation
+	_, err := NewOllamaProvider(config)
+	// We expect this to potentially fail since Ollama might not be running
+	// so we'll just check that the function doesn't panic
+	if err != nil {
+		t.Logf("NewOllamaProvider() error = %v (expected if Ollama is not running)", err)
+	}
+}
+
+func TestOllamaProviderParseOutput(t *testing.T) {
+	config := NewModelConfig("llama3.2").
+		WithProvider("ollama").
+		WithProviderKwargs(map[string]interface{}{
+			"base_url": "http://localhost:11434",
+		})
+	
+	// Create provider without checking availability for unit testing
+	provider := &OllamaProvider{
+		config:  config,
+		baseURL: "http://localhost:11434",
+	}
+	
+	// Test JSON parsing
+	jsonOutput := `{"name": "test", "value": 123}`
+	parsed, err := provider.ParseOutput(jsonOutput)
+	if err != nil {
+		t.Fatalf("ParseOutput() error = %v", err)
+	}
+	
+	result, ok := parsed.(map[string]interface{})
+	if !ok {
+		t.Error("ParseOutput() should return map[string]interface{} for valid JSON")
+	}
+	
+	if result["name"] != "test" {
+		t.Errorf("ParseOutput() name = %v, want 'test'", result["name"])
+	}
+	
+	// Test non-JSON parsing
+	textOutput := "plain text"
+	parsed, err = provider.ParseOutput(textOutput)
+	if err != nil {
+		t.Fatalf("ParseOutput() error = %v", err)
+	}
+	
+	if parsed != textOutput {
+		t.Errorf("ParseOutput() = %v, want %v", parsed, textOutput)
+	}
+}
+
+func TestFactoryFunctions(t *testing.T) {
+	// Test CreateGeminiPro
+	t.Run("CreateGeminiPro", func(t *testing.T) {
+		_, err := CreateGeminiPro("test-key")
+		// We expect this to create without error since we provided an API key
+		if err != nil {
+			t.Errorf("CreateGeminiPro() error = %v", err)
+		}
+	})
+	
+	// Test CreateGeminiFlash
+	t.Run("CreateGeminiFlash", func(t *testing.T) {
+		_, err := CreateGeminiFlash("test-key")
+		if err != nil {
+			t.Errorf("CreateGeminiFlash() error = %v", err)
+		}
+	})
+	
+	// Test CreateOllamaLlama
+	t.Run("CreateOllamaLlama", func(t *testing.T) {
+		_, err := CreateOllamaLlama("http://localhost:11434")
+		// This will likely fail if Ollama is not running, but that's expected
+		if err != nil {
+			t.Logf("CreateOllamaLlama() error = %v (expected if Ollama is not running)", err)
+		}
+	})
+}
+
+func TestProviderDetection(t *testing.T) {
+	tests := []struct {
+		modelID  string
+		expected string
+	}{
+		{"gpt-4", "openai"},
+		{"gpt-3.5-turbo", "openai"},
+		{"gemini-2.5-flash", "gemini"},
+		{"gemini-1.5-pro", "gemini"},
+		{"llama3.2", "ollama"},
+		{"mistral", "ollama"},
+	}
+	
+	for _, test := range tests {
+		t.Run(test.modelID, func(t *testing.T) {
+			var detected bool
+			switch test.expected {
+			case "openai":
+				detected = isOpenAIModel(test.modelID)
+			case "gemini":
+				detected = isGeminiModel(test.modelID)
+			case "ollama":
+				detected = isOllamaModel(test.modelID)
+			}
+			
+			if !detected {
+				t.Errorf("Model %s should be detected as %s provider", test.modelID, test.expected)
+			}
+		})
+	}
+}
