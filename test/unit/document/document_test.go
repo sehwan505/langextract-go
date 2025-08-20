@@ -1,13 +1,15 @@
-package document
+package document_test
 
 import (
 	"strings"
 	"testing"
+
+	"github.com/sehwan505/langextract-go/pkg/document"
 )
 
 func TestNewDocument(t *testing.T) {
 	text := "This is a test document."
-	doc := NewDocument(text)
+	doc := document.NewDocument(text)
 	
 	if doc.Text != text {
 		t.Errorf("Text = %q, want %q", doc.Text, text)
@@ -21,7 +23,7 @@ func TestNewDocument(t *testing.T) {
 func TestNewDocumentWithContext(t *testing.T) {
 	text := "This is a test document."
 	context := "Test context information."
-	doc := NewDocumentWithContext(text, context)
+	doc := document.NewDocumentWithContext(text, context)
 	
 	if doc.Text != text {
 		t.Errorf("Text = %q, want %q", doc.Text, text)
@@ -33,7 +35,7 @@ func TestNewDocumentWithContext(t *testing.T) {
 }
 
 func TestDocument_DocumentID(t *testing.T) {
-	doc := NewDocument("test text")
+	doc := document.NewDocument("test text")
 	
 	// First call should generate an ID
 	id1 := doc.DocumentID()
@@ -54,7 +56,7 @@ func TestDocument_DocumentID(t *testing.T) {
 }
 
 func TestDocument_SetDocumentID(t *testing.T) {
-	doc := NewDocument("test text")
+	doc := document.NewDocument("test text")
 	customID := "custom_id_123"
 	
 	doc.SetDocumentID(customID)
@@ -80,7 +82,7 @@ func TestDocument_TokenizedText(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			doc := NewDocument(tt.text)
+			doc := document.NewDocument(tt.text)
 			got := doc.TokenizedText()
 			
 			if len(got) != len(tt.expected) {
@@ -98,7 +100,7 @@ func TestDocument_TokenizedText(t *testing.T) {
 }
 
 func TestDocument_SetTokenizedText(t *testing.T) {
-	doc := NewDocument("original text")
+	doc := document.NewDocument("original text")
 	customTokens := []string{"custom", "tokens", "here"}
 	
 	doc.SetTokenizedText(customTokens)
@@ -131,7 +133,7 @@ func TestDocument_Length(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			doc := NewDocument(tt.text)
+			doc := document.NewDocument(tt.text)
 			if got := doc.Length(); got != tt.expected {
 				t.Errorf("Length() = %d, want %d", got, tt.expected)
 			}
@@ -154,7 +156,7 @@ func TestDocument_TokenCount(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			doc := NewDocument(tt.text)
+			doc := document.NewDocument(tt.text)
 			if got := doc.TokenCount(); got != tt.expected {
 				t.Errorf("TokenCount() = %d, want %d", got, tt.expected)
 			}
@@ -177,7 +179,7 @@ func TestDocument_IsEmpty(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			doc := NewDocument(tt.text)
+			doc := document.NewDocument(tt.text)
 			if got := doc.IsEmpty(); got != tt.expected {
 				t.Errorf("IsEmpty() = %v, want %v", got, tt.expected)
 			}
@@ -187,7 +189,7 @@ func TestDocument_IsEmpty(t *testing.T) {
 
 func TestDocument_String(t *testing.T) {
 	// Test normal length text
-	doc := NewDocument("This is a short document.")
+	doc := document.NewDocument("This is a short document.")
 	str := doc.String()
 	
 	if !strings.Contains(str, "Document{") {
@@ -200,7 +202,7 @@ func TestDocument_String(t *testing.T) {
 	
 	// Test long text (should be truncated)
 	longText := strings.Repeat("a", 200)
-	longDoc := NewDocument(longText)
+	longDoc := document.NewDocument(longText)
 	longStr := longDoc.String()
 	
 	if !strings.Contains(longStr, "...") {
@@ -218,7 +220,7 @@ func TestDocument_String(t *testing.T) {
 }
 
 func TestDocument_TokenizedTextCaching(t *testing.T) {
-	doc := NewDocument("hello world test")
+	doc := document.NewDocument("hello world test")
 	
 	// First call should tokenize
 	tokens1 := doc.TokenizedText()
@@ -243,22 +245,22 @@ func TestDocument_TokenizedTextCaching(t *testing.T) {
 
 func TestDocument_IDGeneration(t *testing.T) {
 	// Same text should generate same ID
-	doc1 := NewDocument("identical text")
-	doc2 := NewDocument("identical text")
+	doc1 := document.NewDocument("identical text")
+	doc2 := document.NewDocument("identical text")
 	
 	if doc1.DocumentID() != doc2.DocumentID() {
 		t.Error("Documents with identical text should have same ID")
 	}
 	
 	// Different text should generate different IDs
-	doc3 := NewDocument("different text")
+	doc3 := document.NewDocument("different text")
 	
 	if doc1.DocumentID() == doc3.DocumentID() {
 		t.Error("Documents with different text should have different IDs")
 	}
 	
 	// Same text with different context should generate different IDs
-	doc4 := NewDocumentWithContext("identical text", "context")
+	doc4 := document.NewDocumentWithContext("identical text", "context")
 	
 	if doc1.DocumentID() == doc4.DocumentID() {
 		t.Error("Documents with same text but different context should have different IDs")

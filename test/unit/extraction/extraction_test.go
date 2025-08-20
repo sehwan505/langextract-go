@@ -1,8 +1,9 @@
-package extraction
+package extraction_test
 
 import (
 	"testing"
 
+	"github.com/sehwan505/langextract-go/pkg/extraction"
 	"github.com/sehwan505/langextract-go/pkg/types"
 )
 
@@ -10,7 +11,7 @@ func TestNewExtraction(t *testing.T) {
 	class := "person"
 	text := "John Doe"
 
-	ext := NewExtraction(class, text)
+	ext := extraction.NewExtraction(class, text)
 
 	if ext.ExtractionClass != class {
 		t.Errorf("ExtractionClass = %q, want %q", ext.ExtractionClass, class)
@@ -34,7 +35,7 @@ func TestNewExtractionWithInterval(t *testing.T) {
 	text := "John Doe"
 	interval := &types.CharInterval{StartPos: 0, EndPos: 8}
 
-	ext := NewExtractionWithInterval(class, text, interval)
+	ext := extraction.NewExtractionWithInterval(class, text, interval)
 
 	if ext.ExtractionClass != class {
 		t.Errorf("ExtractionClass = %q, want %q", ext.ExtractionClass, class)
@@ -50,7 +51,7 @@ func TestNewExtractionWithInterval(t *testing.T) {
 }
 
 func TestExtraction_SetCharInterval(t *testing.T) {
-	ext := NewExtraction("test", "text")
+	ext := extraction.NewExtraction("test", "text")
 	interval := &types.CharInterval{StartPos: 5, EndPos: 10}
 
 	ext.SetCharInterval(interval)
@@ -61,7 +62,7 @@ func TestExtraction_SetCharInterval(t *testing.T) {
 }
 
 func TestExtraction_SetTokenInterval(t *testing.T) {
-	ext := NewExtraction("test", "text")
+	ext := extraction.NewExtraction("test", "text")
 	interval := &types.TokenInterval{StartToken: 2, EndToken: 5}
 
 	ext.SetTokenInterval(interval)
@@ -72,7 +73,7 @@ func TestExtraction_SetTokenInterval(t *testing.T) {
 }
 
 func TestExtraction_SetAlignmentStatus(t *testing.T) {
-	ext := NewExtraction("test", "text")
+	ext := extraction.NewExtraction("test", "text")
 	status := types.AlignmentExact
 
 	ext.SetAlignmentStatus(status)
@@ -87,7 +88,7 @@ func TestExtraction_SetAlignmentStatus(t *testing.T) {
 }
 
 func TestExtraction_SetExtractionIndex(t *testing.T) {
-	ext := NewExtraction("test", "text")
+	ext := extraction.NewExtraction("test", "text")
 	index := 5
 
 	ext.SetExtractionIndex(index)
@@ -102,7 +103,7 @@ func TestExtraction_SetExtractionIndex(t *testing.T) {
 }
 
 func TestExtraction_SetGroupIndex(t *testing.T) {
-	ext := NewExtraction("test", "text")
+	ext := extraction.NewExtraction("test", "text")
 	index := 3
 
 	ext.SetGroupIndex(index)
@@ -117,7 +118,7 @@ func TestExtraction_SetGroupIndex(t *testing.T) {
 }
 
 func TestExtraction_SetDescription(t *testing.T) {
-	ext := NewExtraction("test", "text")
+	ext := extraction.NewExtraction("test", "text")
 	desc := "Test description"
 
 	ext.SetDescription(desc)
@@ -132,7 +133,7 @@ func TestExtraction_SetDescription(t *testing.T) {
 }
 
 func TestExtraction_AddAttribute(t *testing.T) {
-	ext := NewExtraction("test", "text")
+	ext := extraction.NewExtraction("test", "text")
 
 	ext.AddAttribute("confidence", 0.95)
 	ext.AddAttribute("source", "test_source")
@@ -159,7 +160,7 @@ func TestExtraction_AddAttribute(t *testing.T) {
 }
 
 func TestExtraction_GetAttribute(t *testing.T) {
-	ext := NewExtraction("test", "text")
+	ext := extraction.NewExtraction("test", "text")
 	ext.AddAttribute("test_key", "test_value")
 
 	// Test existing attribute
@@ -179,7 +180,7 @@ func TestExtraction_GetAttribute(t *testing.T) {
 }
 
 func TestExtraction_GetStringAttribute(t *testing.T) {
-	ext := NewExtraction("test", "text")
+	ext := extraction.NewExtraction("test", "text")
 	ext.AddAttribute("string_attr", "string_value")
 	ext.AddAttribute("int_attr", 123)
 
@@ -206,7 +207,7 @@ func TestExtraction_GetStringAttribute(t *testing.T) {
 }
 
 func TestExtraction_GetFloatAttribute(t *testing.T) {
-	ext := NewExtraction("test", "text")
+	ext := extraction.NewExtraction("test", "text")
 	ext.AddAttribute("float64_attr", 123.45)
 	ext.AddAttribute("float32_attr", float32(67.89))
 	ext.AddAttribute("int_attr", 100)
@@ -244,7 +245,7 @@ func TestExtraction_GetFloatAttribute(t *testing.T) {
 }
 
 func TestExtraction_GetIntAttribute(t *testing.T) {
-	ext := NewExtraction("test", "text")
+	ext := extraction.NewExtraction("test", "text")
 	ext.AddAttribute("int_attr", 123)
 	ext.AddAttribute("int64_attr", int64(456))
 	ext.AddAttribute("int32_attr", int32(789))
@@ -279,7 +280,7 @@ func TestExtraction_GetIntAttribute(t *testing.T) {
 }
 
 func TestExtraction_HasCharInterval(t *testing.T) {
-	ext := NewExtraction("test", "text")
+	ext := extraction.NewExtraction("test", "text")
 
 	if ext.HasCharInterval() {
 		t.Error("HasCharInterval() should return false when CharInterval is nil")
@@ -293,7 +294,7 @@ func TestExtraction_HasCharInterval(t *testing.T) {
 }
 
 func TestExtraction_HasTokenInterval(t *testing.T) {
-	ext := NewExtraction("test", "text")
+	ext := extraction.NewExtraction("test", "text")
 
 	if ext.HasTokenInterval() {
 		t.Error("HasTokenInterval() should return false when TokenInterval is nil")
@@ -307,7 +308,7 @@ func TestExtraction_HasTokenInterval(t *testing.T) {
 }
 
 func TestExtraction_IsWellGrounded(t *testing.T) {
-	ext := NewExtraction("test", "text")
+	ext := extraction.NewExtraction("test", "text")
 
 	if ext.IsWellGrounded() {
 		t.Error("IsWellGrounded() should return false when AlignmentStatus is nil")
@@ -327,7 +328,7 @@ func TestExtraction_IsWellGrounded(t *testing.T) {
 }
 
 func TestExtraction_GetSetConfidence(t *testing.T) {
-	ext := NewExtraction("test", "text")
+	ext := extraction.NewExtraction("test", "text")
 
 	// Test when confidence is not set
 	_, ok := ext.GetConfidence()
@@ -362,7 +363,7 @@ func TestExtraction_Length(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			ext := NewExtraction("test", tt.text)
+			ext := extraction.NewExtraction("test", tt.text)
 			if got := ext.Length(); got != tt.expected {
 				t.Errorf("Length() = %d, want %d", got, tt.expected)
 			}
@@ -371,12 +372,12 @@ func TestExtraction_Length(t *testing.T) {
 }
 
 func TestExtraction_IsEmpty(t *testing.T) {
-	emptyExt := NewExtraction("test", "")
+	emptyExt := extraction.NewExtraction("test", "")
 	if !emptyExt.IsEmpty() {
 		t.Error("IsEmpty() should return true for empty text")
 	}
 
-	nonEmptyExt := NewExtraction("test", "text")
+	nonEmptyExt := extraction.NewExtraction("test", "text")
 	if nonEmptyExt.IsEmpty() {
 		t.Error("IsEmpty() should return false for non-empty text")
 	}
@@ -384,7 +385,7 @@ func TestExtraction_IsEmpty(t *testing.T) {
 
 func TestExtraction_Copy(t *testing.T) {
 	// Create original extraction with all fields set
-	original := NewExtraction("person", "John Doe")
+	original := extraction.NewExtraction("person", "John Doe")
 	original.SetCharInterval(&types.CharInterval{StartPos: 0, EndPos: 8})
 	original.SetTokenInterval(&types.TokenInterval{StartToken: 0, EndToken: 2})
 	original.SetAlignmentStatus(types.AlignmentExact)
@@ -456,7 +457,7 @@ func TestExtraction_Copy(t *testing.T) {
 
 func TestExtraction_String(t *testing.T) {
 	// Test extraction without interval
-	ext1 := NewExtraction("person", "John Doe")
+	ext1 := extraction.NewExtraction("person", "John Doe")
 	str1 := ext1.String()
 
 	if !contains(str1, "person") || !contains(str1, "John Doe") || !contains(str1, "no-position") {
@@ -464,7 +465,7 @@ func TestExtraction_String(t *testing.T) {
 	}
 
 	// Test extraction with interval
-	ext2 := NewExtractionWithInterval("person", "John Doe", &types.CharInterval{StartPos: 0, EndPos: 8})
+	ext2 := extraction.NewExtractionWithInterval("person", "John Doe", &types.CharInterval{StartPos: 0, EndPos: 8})
 	str2 := ext2.String()
 
 	if !contains(str2, "person") || !contains(str2, "John Doe") || !contains(str2, "[0:8)") {
@@ -473,7 +474,7 @@ func TestExtraction_String(t *testing.T) {
 
 	// Test long text truncation
 	longText := "This is a very long extraction text that should be truncated in the string representation"
-	ext3 := NewExtraction("long", longText)
+	ext3 := extraction.NewExtraction("long", longText)
 	str3 := ext3.String()
 
 	if !contains(str3, "...") {

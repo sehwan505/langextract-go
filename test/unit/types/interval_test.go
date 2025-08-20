@@ -1,7 +1,9 @@
-package types
+package types_test
 
 import (
 	"testing"
+
+	"github.com/sehwan505/langextract-go/pkg/types"
 )
 
 func TestCharInterval_NewCharInterval(t *testing.T) {
@@ -20,7 +22,7 @@ func TestCharInterval_NewCharInterval(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			interval, err := NewCharInterval(tt.start, tt.end)
+			interval, err := types.NewCharInterval(tt.start, tt.end)
 			
 			if tt.wantError {
 				if err == nil {
@@ -47,13 +49,13 @@ func TestCharInterval_NewCharInterval(t *testing.T) {
 func TestCharInterval_Length(t *testing.T) {
 	tests := []struct {
 		name     string
-		interval CharInterval
+		interval types.CharInterval
 		expected int
 	}{
-		{"empty interval", CharInterval{0, 0}, 0},
-		{"single character", CharInterval{0, 1}, 1},
-		{"multiple characters", CharInterval{5, 10}, 5},
-		{"large interval", CharInterval{100, 1000}, 900},
+		{"empty interval", types.CharInterval{StartPos: 0, EndPos: 0}, 0},
+		{"single character", types.CharInterval{StartPos: 0, EndPos: 1}, 1},
+		{"multiple characters", types.CharInterval{StartPos: 5, EndPos: 10}, 5},
+		{"large interval", types.CharInterval{StartPos: 100, EndPos: 1000}, 900},
 	}
 
 	for _, tt := range tests {
@@ -68,13 +70,13 @@ func TestCharInterval_Length(t *testing.T) {
 func TestCharInterval_IsEmpty(t *testing.T) {
 	tests := []struct {
 		name     string
-		interval CharInterval
+		interval types.CharInterval
 		expected bool
 	}{
-		{"empty interval", CharInterval{0, 0}, true},
-		{"empty interval at position", CharInterval{5, 5}, true},
-		{"non-empty interval", CharInterval{0, 1}, false},
-		{"large interval", CharInterval{10, 100}, false},
+		{"empty interval", types.CharInterval{StartPos: 0, EndPos: 0}, true},
+		{"empty interval at position", types.CharInterval{StartPos: 5, EndPos: 5}, true},
+		{"non-empty interval", types.CharInterval{StartPos: 0, EndPos: 1}, false},
+		{"large interval", types.CharInterval{StartPos: 10, EndPos: 100}, false},
 	}
 
 	for _, tt := range tests {
@@ -87,7 +89,7 @@ func TestCharInterval_IsEmpty(t *testing.T) {
 }
 
 func TestCharInterval_Contains(t *testing.T) {
-	interval := CharInterval{5, 10}
+	interval := types.CharInterval{StartPos: 5, EndPos: 10}
 	
 	tests := []struct {
 		name     string
@@ -112,22 +114,22 @@ func TestCharInterval_Contains(t *testing.T) {
 }
 
 func TestCharInterval_Overlaps(t *testing.T) {
-	interval1 := CharInterval{5, 10}
+	interval1 := types.CharInterval{StartPos: 5, EndPos: 10}
 	
 	tests := []struct {
 		name      string
-		interval2 CharInterval
+		interval2 types.CharInterval
 		expected  bool
 	}{
-		{"no overlap before", CharInterval{0, 3}, false},
-		{"no overlap after", CharInterval{12, 15}, false},
-		{"touching before", CharInterval{0, 5}, false},
-		{"touching after", CharInterval{10, 15}, false},
-		{"partial overlap before", CharInterval{3, 7}, true},
-		{"partial overlap after", CharInterval{8, 12}, true},
-		{"complete overlap", CharInterval{6, 9}, true},
-		{"identical", CharInterval{5, 10}, true},
-		{"containing", CharInterval{0, 15}, true},
+		{"no overlap before", types.CharInterval{StartPos: 0, EndPos: 3}, false},
+		{"no overlap after", types.CharInterval{StartPos: 12, EndPos: 15}, false},
+		{"touching before", types.CharInterval{StartPos: 0, EndPos: 5}, false},
+		{"touching after", types.CharInterval{StartPos: 10, EndPos: 15}, false},
+		{"partial overlap before", types.CharInterval{StartPos: 3, EndPos: 7}, true},
+		{"partial overlap after", types.CharInterval{StartPos: 8, EndPos: 12}, true},
+		{"complete overlap", types.CharInterval{StartPos: 6, EndPos: 9}, true},
+		{"identical", types.CharInterval{StartPos: 5, EndPos: 10}, true},
+		{"containing", types.CharInterval{StartPos: 0, EndPos: 15}, true},
 	}
 
 	for _, tt := range tests {
@@ -142,15 +144,15 @@ func TestCharInterval_Overlaps(t *testing.T) {
 func TestCharInterval_Union(t *testing.T) {
 	tests := []struct {
 		name      string
-		interval1 CharInterval
-		interval2 CharInterval
-		expected  CharInterval
+		interval1 types.CharInterval
+		interval2 types.CharInterval
+		expected  types.CharInterval
 	}{
-		{"adjacent intervals", CharInterval{0, 5}, CharInterval{5, 10}, CharInterval{0, 10}},
-		{"overlapping intervals", CharInterval{3, 8}, CharInterval{6, 12}, CharInterval{3, 12}},
-		{"identical intervals", CharInterval{5, 10}, CharInterval{5, 10}, CharInterval{5, 10}},
-		{"contained interval", CharInterval{2, 15}, CharInterval{5, 10}, CharInterval{2, 15}},
-		{"separate intervals", CharInterval{0, 3}, CharInterval{7, 10}, CharInterval{0, 10}},
+		{"adjacent intervals", types.CharInterval{StartPos: 0, EndPos: 5}, types.CharInterval{StartPos: 5, EndPos: 10}, types.CharInterval{StartPos: 0, EndPos: 10}},
+		{"overlapping intervals", types.CharInterval{StartPos: 3, EndPos: 8}, types.CharInterval{StartPos: 6, EndPos: 12}, types.CharInterval{StartPos: 3, EndPos: 12}},
+		{"identical intervals", types.CharInterval{StartPos: 5, EndPos: 10}, types.CharInterval{StartPos: 5, EndPos: 10}, types.CharInterval{StartPos: 5, EndPos: 10}},
+		{"contained interval", types.CharInterval{StartPos: 2, EndPos: 15}, types.CharInterval{StartPos: 5, EndPos: 10}, types.CharInterval{StartPos: 2, EndPos: 15}},
+		{"separate intervals", types.CharInterval{StartPos: 0, EndPos: 3}, types.CharInterval{StartPos: 7, EndPos: 10}, types.CharInterval{StartPos: 0, EndPos: 10}},
 	}
 
 	for _, tt := range tests {
@@ -166,15 +168,15 @@ func TestCharInterval_Union(t *testing.T) {
 func TestCharInterval_Intersection(t *testing.T) {
 	tests := []struct {
 		name      string
-		interval1 CharInterval
-		interval2 CharInterval
-		expected  *CharInterval
+		interval1 types.CharInterval
+		interval2 types.CharInterval
+		expected  *types.CharInterval
 	}{
-		{"no overlap", CharInterval{0, 5}, CharInterval{7, 10}, nil},
-		{"touching", CharInterval{0, 5}, CharInterval{5, 10}, nil},
-		{"partial overlap", CharInterval{3, 8}, CharInterval{6, 12}, &CharInterval{6, 8}},
-		{"identical", CharInterval{5, 10}, CharInterval{5, 10}, &CharInterval{5, 10}},
-		{"contained", CharInterval{2, 15}, CharInterval{5, 10}, &CharInterval{5, 10}},
+		{"no overlap", types.CharInterval{StartPos: 0, EndPos: 5}, types.CharInterval{StartPos: 7, EndPos: 10}, nil},
+		{"touching", types.CharInterval{StartPos: 0, EndPos: 5}, types.CharInterval{StartPos: 5, EndPos: 10}, nil},
+		{"partial overlap", types.CharInterval{StartPos: 3, EndPos: 8}, types.CharInterval{StartPos: 6, EndPos: 12}, &types.CharInterval{StartPos: 6, EndPos: 8}},
+		{"identical", types.CharInterval{StartPos: 5, EndPos: 10}, types.CharInterval{StartPos: 5, EndPos: 10}, &types.CharInterval{StartPos: 5, EndPos: 10}},
+		{"contained", types.CharInterval{StartPos: 2, EndPos: 15}, types.CharInterval{StartPos: 5, EndPos: 10}, &types.CharInterval{StartPos: 5, EndPos: 10}},
 	}
 
 	for _, tt := range tests {
@@ -198,12 +200,12 @@ func TestCharInterval_Intersection(t *testing.T) {
 func TestCharInterval_String(t *testing.T) {
 	tests := []struct {
 		name     string
-		interval CharInterval
+		interval types.CharInterval
 		expected string
 	}{
-		{"empty interval", CharInterval{0, 0}, "[0:0)"},
-		{"single character", CharInterval{5, 6}, "[5:6)"},
-		{"multiple characters", CharInterval{10, 20}, "[10:20)"},
+		{"empty interval", types.CharInterval{StartPos: 0, EndPos: 0}, "[0:0)"},
+		{"single character", types.CharInterval{StartPos: 5, EndPos: 6}, "[5:6)"},
+		{"multiple characters", types.CharInterval{StartPos: 10, EndPos: 20}, "[10:20)"},
 	}
 
 	for _, tt := range tests {
@@ -230,7 +232,7 @@ func TestTokenInterval_NewTokenInterval(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			interval, err := NewTokenInterval(tt.start, tt.end)
+			interval, err := types.NewTokenInterval(tt.start, tt.end)
 			
 			if tt.wantError {
 				if err == nil {
@@ -257,12 +259,12 @@ func TestTokenInterval_NewTokenInterval(t *testing.T) {
 func TestTokenInterval_Length(t *testing.T) {
 	tests := []struct {
 		name     string
-		interval TokenInterval
+		interval types.TokenInterval
 		expected int
 	}{
-		{"empty interval", TokenInterval{0, 0}, 0},
-		{"single token", TokenInterval{0, 1}, 1},
-		{"multiple tokens", TokenInterval{5, 10}, 5},
+		{"empty interval", types.TokenInterval{StartToken: 0, EndToken: 0}, 0},
+		{"single token", types.TokenInterval{StartToken: 0, EndToken: 1}, 1},
+		{"multiple tokens", types.TokenInterval{StartToken: 5, EndToken: 10}, 5},
 	}
 
 	for _, tt := range tests {
@@ -275,7 +277,7 @@ func TestTokenInterval_Length(t *testing.T) {
 }
 
 func TestTokenInterval_Contains(t *testing.T) {
-	interval := TokenInterval{5, 10}
+	interval := types.TokenInterval{StartToken: 5, EndToken: 10}
 	
 	tests := []struct {
 		name     string
@@ -302,12 +304,12 @@ func TestTokenInterval_Contains(t *testing.T) {
 func TestTokenInterval_String(t *testing.T) {
 	tests := []struct {
 		name     string
-		interval TokenInterval
+		interval types.TokenInterval
 		expected string
 	}{
-		{"empty interval", TokenInterval{0, 0}, "tokens[0:0)"},
-		{"single token", TokenInterval{5, 6}, "tokens[5:6)"},
-		{"multiple tokens", TokenInterval{10, 20}, "tokens[10:20)"},
+		{"empty interval", types.TokenInterval{StartToken: 0, EndToken: 0}, "tokens[0:0)"},
+		{"single token", types.TokenInterval{StartToken: 5, EndToken: 6}, "tokens[5:6)"},
+		{"multiple tokens", types.TokenInterval{StartToken: 10, EndToken: 20}, "tokens[10:20)"},
 	}
 
 	for _, tt := range tests {

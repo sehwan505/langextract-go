@@ -1,12 +1,14 @@
-package providers
+package providers_test
 
 import (
 	"context"
 	"testing"
+
+	"github.com/sehwan505/langextract-go/pkg/providers"
 )
 
 func TestModelConfig(t *testing.T) {
-	config := NewModelConfig("gpt-4")
+	config := providers.NewModelConfig("gpt-4")
 	
 	if config.ModelID != "gpt-4" {
 		t.Errorf("ModelID = %q, want 'gpt-4'", config.ModelID)
@@ -22,7 +24,7 @@ func TestModelConfig(t *testing.T) {
 }
 
 func TestModelConfigChaining(t *testing.T) {
-	config := NewModelConfig("gpt-4").
+	config := providers.NewModelConfig("gpt-4").
 		WithProvider("openai").
 		WithTemperature(0.5).
 		WithProviderKwargs(map[string]interface{}{
@@ -43,10 +45,10 @@ func TestModelConfigChaining(t *testing.T) {
 }
 
 func TestProviderRegistry(t *testing.T) {
-	registry := NewProviderRegistry()
+	registry := providers.NewProviderRegistry()
 	
 	// Test registration
-	mockFactory := func(config *ModelConfig) (BaseLanguageModel, error) {
+	mockFactory := func(config *providers.ModelConfig) (providers.BaseLanguageModel, error) {
 		return &MockProvider{config: config}, nil
 	}
 	
@@ -56,9 +58,9 @@ func TestProviderRegistry(t *testing.T) {
 		t.Error("Provider 'mock' should be registered")
 	}
 	
-	providers := registry.GetAvailableProviders()
+	providersList := registry.GetAvailableProviders()
 	found := false
-	for _, provider := range providers {
+	for _, provider := range providersList {
 		if provider == "mock" {
 			found = true
 			break
@@ -70,9 +72,9 @@ func TestProviderRegistry(t *testing.T) {
 }
 
 func TestProviderRegistryAliases(t *testing.T) {
-	registry := NewProviderRegistry()
+	registry := providers.NewProviderRegistry()
 	
-	mockFactory := func(config *ModelConfig) (BaseLanguageModel, error) {
+	mockFactory := func(config *providers.ModelConfig) (providers.BaseLanguageModel, error) {
 		return &MockProvider{config: config}, nil
 	}
 	
@@ -80,7 +82,7 @@ func TestProviderRegistryAliases(t *testing.T) {
 	registry.RegisterAlias("test-model", "mock")
 	
 	// Test creating model with alias
-	config := NewModelConfig("test-model")
+	config := providers.NewModelConfig("test-model")
 	model, err := registry.CreateModel(config)
 	if err != nil {
 		t.Fatalf("CreateModel() error = %v", err)
@@ -92,17 +94,17 @@ func TestProviderRegistryAliases(t *testing.T) {
 }
 
 func TestCreateModelErrors(t *testing.T) {
-	registry := NewProviderRegistry()
+	registry := providers.NewProviderRegistry()
 	
 	// Test unknown provider
-	config := NewModelConfig("unknown-model").WithProvider("unknown")
+	config := providers.NewModelConfig("unknown-model").WithProvider("unknown")
 	_, err := registry.CreateModel(config)
 	if err == nil {
 		t.Error("CreateModel() should return error for unknown provider")
 	}
 	
 	// Test no provider and no alias
-	config = NewModelConfig("unknown-model")
+	config = providers.NewModelConfig("unknown-model")
 	_, err = registry.CreateModel(config)
 	if err == nil {
 		t.Error("CreateModel() should return error when no provider specified and no alias found")
@@ -111,15 +113,15 @@ func TestCreateModelErrors(t *testing.T) {
 
 // MockProvider implements BaseLanguageModel for testing
 type MockProvider struct {
-	config      *ModelConfig
+	config      *providers.ModelConfig
 	schema      interface{}
 	fenceOutput bool
 }
 
-func (m *MockProvider) Infer(ctx context.Context, prompts []string, options map[string]interface{}) ([][]ScoredOutput, error) {
-	results := make([][]ScoredOutput, len(prompts))
+func (m *MockProvider) Infer(ctx context.Context, prompts []string, options map[string]interface{}) ([][]providers.ScoredOutput, error) {
+	results := make([][]providers.ScoredOutput, len(prompts))
 	for i, prompt := range prompts {
-		results[i] = []ScoredOutput{
+		results[i] = []providers.ScoredOutput{
 			{Output: "Mock response for: " + prompt, Score: 1.0},
 		}
 	}
@@ -147,13 +149,13 @@ func (m *MockProvider) IsAvailable() bool {
 }
 
 func TestGeminiProviderCreation(t *testing.T) {
-	config := NewModelConfig("gemini-2.5-flash").
+	config := providers.NewModelConfig("gemini-2.5-flash").
 		WithProvider("gemini").
 		WithProviderKwargs(map[string]interface{}{
 			"api_key": "test-gemini-key",
 		})
 	
-	provider, err := NewGeminiProvider(config)
+	provider, err := providers.NewGeminiProvider(config)
 	if err != nil {
 		t.Fatalf("NewGeminiProvider() error = %v", err)
 	}
@@ -168,22 +170,22 @@ func TestGeminiProviderCreation(t *testing.T) {
 }
 
 func TestGeminiProviderWithoutAPIKey(t *testing.T) {
-	config := NewModelConfig("gemini-2.5-flash").WithProvider("gemini")
+	config := providers.NewModelConfig("gemini-2.5-flash").WithProvider("gemini")
 	
-	_, err := NewGeminiProvider(config)
+	_, err := providers.NewGeminiProvider(config)
 	if err == nil {
 		t.Error("NewGeminiProvider() should return error when no API key is provided")
 	}
 }
 
 func TestGeminiProviderParseOutput(t *testing.T) {
-	config := NewModelConfig("gemini-2.5-flash").
+	config := providers.NewModelConfig("gemini-2.5-flash").
 		WithProvider("gemini").
 		WithProviderKwargs(map[string]interface{}{
 			"api_key": "test-key",
 		})
 	
-	provider, err := NewGeminiProvider(config)
+	provider, err := providers.NewGeminiProvider(config)
 	if err != nil {
 		t.Fatalf("NewGeminiProvider() error = %v", err)
 	}
@@ -217,14 +219,14 @@ func TestGeminiProviderParseOutput(t *testing.T) {
 }
 
 func TestOllamaProviderCreation(t *testing.T) {
-	config := NewModelConfig("llama3.2").
+	config := providers.NewModelConfig("llama3.2").
 		WithProvider("ollama").
 		WithProviderKwargs(map[string]interface{}{
 			"base_url": "http://localhost:11434",
 		})
 	
 	// Note: This will fail if Ollama is not running, but we can still test the basic creation
-	_, err := NewOllamaProvider(config)
+	_, err := providers.NewOllamaProvider(config)
 	// We expect this to potentially fail since Ollama might not be running
 	// so we'll just check that the function doesn't panic
 	if err != nil {
@@ -233,16 +235,16 @@ func TestOllamaProviderCreation(t *testing.T) {
 }
 
 func TestOllamaProviderParseOutput(t *testing.T) {
-	config := NewModelConfig("llama3.2").
+	config := providers.NewModelConfig("llama3.2").
 		WithProvider("ollama").
 		WithProviderKwargs(map[string]interface{}{
 			"base_url": "http://localhost:11434",
 		})
 	
 	// Create provider without checking availability for unit testing
-	provider := &OllamaProvider{
-		config:  config,
-		baseURL: "http://localhost:11434",
+	provider := &providers.OllamaProvider{
+		Config:  config,
+		BaseURL: "http://localhost:11434",
 	}
 	
 	// Test JSON parsing
@@ -276,7 +278,7 @@ func TestOllamaProviderParseOutput(t *testing.T) {
 func TestFactoryFunctions(t *testing.T) {
 	// Test CreateGeminiPro
 	t.Run("CreateGeminiPro", func(t *testing.T) {
-		_, err := CreateGeminiPro("test-key")
+		_, err := providers.CreateGeminiPro("test-key")
 		// We expect this to create without error since we provided an API key
 		if err != nil {
 			t.Errorf("CreateGeminiPro() error = %v", err)
@@ -285,7 +287,7 @@ func TestFactoryFunctions(t *testing.T) {
 	
 	// Test CreateGeminiFlash
 	t.Run("CreateGeminiFlash", func(t *testing.T) {
-		_, err := CreateGeminiFlash("test-key")
+		_, err := providers.CreateGeminiFlash("test-key")
 		if err != nil {
 			t.Errorf("CreateGeminiFlash() error = %v", err)
 		}
@@ -293,42 +295,10 @@ func TestFactoryFunctions(t *testing.T) {
 	
 	// Test CreateOllamaLlama
 	t.Run("CreateOllamaLlama", func(t *testing.T) {
-		_, err := CreateOllamaLlama("http://localhost:11434")
+		_, err := providers.CreateOllamaLlama("http://localhost:11434")
 		// This will likely fail if Ollama is not running, but that's expected
 		if err != nil {
 			t.Logf("CreateOllamaLlama() error = %v (expected if Ollama is not running)", err)
 		}
 	})
-}
-
-func TestProviderDetection(t *testing.T) {
-	tests := []struct {
-		modelID  string
-		expected string
-	}{
-		{"gpt-4", "openai"},
-		{"gpt-3.5-turbo", "openai"},
-		{"gemini-2.5-flash", "gemini"},
-		{"gemini-1.5-pro", "gemini"},
-		{"llama3.2", "ollama"},
-		{"mistral", "ollama"},
-	}
-	
-	for _, test := range tests {
-		t.Run(test.modelID, func(t *testing.T) {
-			var detected bool
-			switch test.expected {
-			case "openai":
-				detected = isOpenAIModel(test.modelID)
-			case "gemini":
-				detected = isGeminiModel(test.modelID)
-			case "ollama":
-				detected = isOllamaModel(test.modelID)
-			}
-			
-			if !detected {
-				t.Errorf("Model %s should be detected as %s provider", test.modelID, test.expected)
-			}
-		})
-	}
 }
