@@ -72,3 +72,9 @@ func (c *ModelConfig) WithTemperature(temp float64) *ModelConfig {
 	c.Temperature = temp
 	return c
 }
+
+// WithMaxTokens sets the maximum tokens parameter.
+func (c *ModelConfig) WithMaxTokens(maxTokens int) *ModelConfig {
+	c.MaxTokens = maxTokens
+	return c
+}

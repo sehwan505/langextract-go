@@ -107,3 +107,29 @@ func CreateModel(config *ModelConfig) (BaseLanguageModel, error) {
 func GetAvailableProviders() []string {
 	return defaultRegistry.GetAvailableProviders()
 }
+
+// RegisterDefaultProviders registers all default providers with the given registry.
+func RegisterDefaultProviders(registry *ProviderRegistry) {
+	// Register OpenAI provider
+	registry.Register("openai", func(config *ModelConfig) (BaseLanguageModel, error) {
+		return NewOpenAIProvider(config)
+	})
+	
+	// Register Gemini provider
+	registry.Register("gemini", func(config *ModelConfig) (BaseLanguageModel, error) {
+		return NewGeminiProvider(config)
+	})
+	
+	// Register Ollama provider
+	registry.Register("ollama", func(config *ModelConfig) (BaseLanguageModel, error) {
+		return NewOllamaProvider(config)
+	})
+	
+	// Register common model aliases
+	registry.RegisterAlias("gpt-4", "openai")
+	registry.RegisterAlias("gpt-3.5-turbo", "openai")
+	registry.RegisterAlias("gemini-2.5-flash", "gemini")
+	registry.RegisterAlias("gemini-1.5-pro", "gemini")
+	registry.RegisterAlias("llama3.2", "ollama")
+	registry.RegisterAlias("mistral", "ollama")
+}
