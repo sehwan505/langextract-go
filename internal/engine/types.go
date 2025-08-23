@@ -89,6 +89,7 @@ type ExtractionProgress struct {
 	EstimatedTotal  time.Duration `json:"estimated_total,omitempty"`
 	CurrentPass     int           `json:"current_pass"`
 	TotalPasses     int           `json:"total_passes"`
+	CurrentChunk    int           `json:"current_chunk"`
 	ChunksProcessed int           `json:"chunks_processed"`
 	TotalChunks     int           `json:"total_chunks"`
 }
@@ -157,17 +158,18 @@ type SchemaValidationResult struct {
 type ExtractionStage string
 
 const (
-	StageInitialization ExtractionStage = "initialization"
-	StagePreprocessing  ExtractionStage = "preprocessing"
-	StagePromptBuilding ExtractionStage = "prompt_building"
-	StageProviderCall   ExtractionStage = "provider_call"
+	StageInitialization  ExtractionStage = "initialization"
+	StagePreprocessing   ExtractionStage = "preprocessing"
+	StagePromptBuilding  ExtractionStage = "prompt_building"
+	StageProviderCall    ExtractionStage = "provider_call"
+	StageChunkProcessing ExtractionStage = "chunk_processing"
 	StageResponseParsing ExtractionStage = "response_parsing"
-	StageValidation     ExtractionStage = "validation"
-	StageAlignment      ExtractionStage = "alignment"
-	StageAggregation    ExtractionStage = "aggregation"
-	StageFinalization   ExtractionStage = "finalization"
-	StageComplete       ExtractionStage = "complete"
-	StageError          ExtractionStage = "error"
+	StageValidation      ExtractionStage = "validation"
+	StageAlignment       ExtractionStage = "alignment"
+	StageAggregation     ExtractionStage = "aggregation"
+	StageFinalization    ExtractionStage = "finalization"
+	StageComplete        ExtractionStage = "complete"
+	StageError           ExtractionStage = "error"
 )
 
 // ExtractionStatus represents the status of an extraction operation.
