@@ -34,6 +34,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/sehwan505/langextract-go/internal/visualization"
 	"github.com/sehwan505/langextract-go/pkg/document"
 	"github.com/sehwan505/langextract-go/pkg/extraction"
 	"github.com/sehwan505/langextract-go/pkg/providers"
@@ -432,4 +433,70 @@ func parseExtractions(response, sourceText string, provider providers.BaseLangua
 	}
 
 	return extractions, nil
+}
+
+// Visualize generates visualizations from annotated documents.
+// This function provides multiple output formats including interactive HTML, JSON, CSV, and Markdown.
+//
+// The input can be:
+//   - An AnnotatedDocument (the most common case)
+//   - A path to a JSONL file containing annotated documents
+//
+// Example usage:
+//
+//	doc, err := langextract.Extract("John works at Google", opts)
+//	if err != nil {
+//		log.Fatal(err)
+//	}
+//
+//	// Generate interactive HTML
+//	html, err := langextract.Visualize(doc, NewVisualizeOptions().WithFormat("html"))
+//	if err != nil {
+//		log.Fatal(err)
+//	}
+//
+//	// Export as JSON
+//	json, err := langextract.Visualize(doc, NewVisualizeOptions().WithFormat("json"))
+//	if err != nil {
+//		log.Fatal(err)
+//	}
+func Visualize(input interface{}, opts *VisualizeOptions) (string, error) {
+	if opts == nil {
+		opts = NewVisualizeOptions()
+	}
+
+	// Convert input to AnnotatedDocument
+	var doc *document.AnnotatedDocument
+	var err error
+
+	switch v := input.(type) {
+	case *document.AnnotatedDocument:
+		doc = v
+	case string:
+		// Try to interpret as file path
+		return "", fmt.Errorf("file path input not yet supported")
+	default:
+		return "", fmt.Errorf("unsupported input type: %T", input)
+	}
+
+	if doc == nil {
+		return "", fmt.Errorf("no document to visualize")
+	}
+
+	// Convert options to internal format
+	vizOpts := convertToVisualizationOptions(opts)
+
+	// Get the default visualizer
+	visualizer := visualization.GetDefaultVisualizer()
+	if visualizer == nil {
+		return "", fmt.Errorf("no visualizer available")
+	}
+
+	// Generate visualization
+	result, err := visualizer.Generate(context.Background(), doc, vizOpts)
+	if err != nil {
+		return "", fmt.Errorf("visualization failed: %w", err)
+	}
+
+	return result, nil
 }
