@@ -7,8 +7,9 @@ import (
 
 // ExampleData represents a training example with input text and expected extractions.
 type ExampleData struct {
-	Text        string        `json:"text"`                  // Input text for the example
-	Extractions []*Extraction `json:"extractions,omitempty"` // Expected extractions from the text
+	Text        string                 `json:"text"`                  // Input text for the example
+	Extractions []*Extraction          `json:"extractions,omitempty"` // Expected extractions from the text
+	Metadata    map[string]interface{} `json:"metadata,omitempty"`    // Additional metadata about the example
 }
 
 // NewExampleData creates a new ExampleData with the given text.
@@ -131,4 +132,9 @@ func (ed *ExampleData) String() string {
 		preview = preview[:97] + "..."
 	}
 	return fmt.Sprintf("ExampleData{text=%q, extractions=%d}", preview, len(ed.Extractions))
+}
+
+// Input returns the input text (alias for Text for compatibility)
+func (ed *ExampleData) Input() string {
+	return ed.Text
 }

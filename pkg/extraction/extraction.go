@@ -245,3 +245,24 @@ func (e *Extraction) String() string {
 	return fmt.Sprintf("Extraction{class=%s, text=%q, pos=%s}",
 		e.ExtractionClass, preview, pos)
 }
+
+// Class returns the extraction class (alias for ExtractionClass for compatibility)
+func (e *Extraction) Class() string {
+	return e.ExtractionClass
+}
+
+// Text returns the extraction text (alias for ExtractionText for compatibility) 
+func (e *Extraction) Text() string {
+	return e.ExtractionText
+}
+
+// Interval returns the character interval (alias for CharInterval for compatibility)
+func (e *Extraction) Interval() *types.CharInterval {
+	return e.CharInterval
+}
+
+// Confidence returns the confidence score from attributes if available
+func (e *Extraction) Confidence() float64 {
+	conf, _ := e.GetConfidence()
+	return conf
+}
