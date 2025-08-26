@@ -50,7 +50,7 @@ func (e *CSVExporter) Export(ctx context.Context, doc *document.AnnotatedDocumen
 	}
 	
 	// Filter and sort extractions
-	validExtractions := e.filterValidExtractions(doc.Extractions(), opts.FilterClasses)
+	validExtractions := e.filterValidExtractions(doc.Extractions, opts.FilterClasses)
 	if opts.SortBy != "" {
 		validExtractions = e.sortExtractions(validExtractions, opts.SortBy, opts.SortOrder)
 	}
@@ -157,9 +157,9 @@ func (e *CSVExporter) buildRecord(ext *extraction.Extraction, index int, doc *do
 		if ext.Interval() != nil {
 			interval := ext.Interval()
 			record = append(record, 
-				strconv.Itoa(interval.Start()),
-				strconv.Itoa(interval.End()),
-				strconv.Itoa(interval.End()-interval.Start()))
+				strconv.Itoa(interval.StartPos),
+				strconv.Itoa(interval.EndPos),
+				strconv.Itoa(interval.EndPos-interval.StartPos))
 		} else {
 			record = append(record, "", "", "")
 		}
@@ -284,10 +284,10 @@ func (e *CSVExporter) sortExtractions(extractions []*extraction.Extraction, sort
 			posJ := 0
 			
 			if sorted[i].Interval() != nil {
-				posI = sorted[i].Interval().Start()
+				posI = sorted[i].Interval().StartPos
 			}
 			if sorted[j].Interval() != nil {
-				posJ = sorted[j].Interval().Start()
+				posJ = sorted[j].Interval().StartPos
 			}
 			
 			if order == SortOrderDesc {
@@ -348,8 +348,8 @@ func (e *CSVExporter) extractMetadata(ext *extraction.Extraction) map[string]int
 	
 	if ext.Interval() != nil {
 		interval := ext.Interval()
-		metadata["start"] = interval.Start()
-		metadata["end"] = interval.End()
+		metadata["start"] = interval.StartPos
+		metadata["end"] = interval.EndPos
 	}
 	
 	if ext.Confidence() > 0 {
@@ -388,7 +388,7 @@ func (e *CSVExporter) ExportSummary(ctx context.Context, doc *document.Annotated
 		opts = e.options
 	}
 	
-	validExtractions := e.filterValidExtractions(doc.Extractions(), opts.FilterClasses)
+	validExtractions := e.filterValidExtractions(doc.Extractions, opts.FilterClasses)
 	
 	// Group extractions by class
 	classCounts := make(map[string]int)

@@ -43,7 +43,7 @@ func (e *MarkdownExporter) Export(ctx context.Context, doc *document.AnnotatedDo
 	}
 	
 	// Filter and sort extractions
-	validExtractions := e.filterValidExtractions(doc.Extractions(), opts.FilterClasses)
+	validExtractions := e.filterValidExtractions(doc.Extractions, opts.FilterClasses)
 	if opts.SortBy != "" {
 		validExtractions = e.sortExtractions(validExtractions, opts.SortBy, opts.SortOrder)
 	}
@@ -61,7 +61,7 @@ func (e *MarkdownExporter) Export(ctx context.Context, doc *document.AnnotatedDo
 	
 	// Document text with highlights (if requested)
 	if opts.IncludeText {
-		e.writeHighlightedText(&md, doc.Text(), validExtractions, opts)
+		e.writeHighlightedText(&md, doc.Text, validExtractions, opts)
 	}
 	
 	// Extraction details
@@ -97,7 +97,7 @@ func (e *MarkdownExporter) writeHeader(md *strings.Builder, doc *document.Annota
 	
 	// Basic information
 	md.WriteString(fmt.Sprintf("**Generated:** %s\n\n", time.Now().Format("2006-01-02 15:04:05 UTC")))
-	md.WriteString(fmt.Sprintf("**Document Length:** %d characters\n\n", len(doc.Text())))
+	md.WriteString(fmt.Sprintf("**Document Length:** %d characters\n\n", len(doc.Text)))
 	md.WriteString(fmt.Sprintf("**Total Extractions:** %d\n\n", len(extractions)))
 	
 	// Extraction classes summary
@@ -200,7 +200,7 @@ func (e *MarkdownExporter) writeExtractionItem(md *strings.Builder, ext *extract
 	if opts.IncludePositions && ext.Interval() != nil {
 		interval := ext.Interval()
 		md.WriteString(fmt.Sprintf("| **Position** | %d-%d (length: %d) |\n", 
-			interval.Start(), interval.End(), interval.End()-interval.Start()))
+			interval.StartPos, interval.EndPos, interval.EndPos-interval.StartPos))
 	}
 	
 	// Add confidence if available
@@ -316,7 +316,7 @@ func (e *MarkdownExporter) createHighlightedMarkdown(text string, extractions []
 		if sortedExtractions[i].Interval() == nil || sortedExtractions[j].Interval() == nil {
 			return false
 		}
-		return sortedExtractions[i].Interval().Start() < sortedExtractions[j].Interval().Start()
+		return sortedExtractions[i].Interval().StartPos < sortedExtractions[j].Interval().StartPos
 	})
 	
 	var result strings.Builder
@@ -328,8 +328,8 @@ func (e *MarkdownExporter) createHighlightedMarkdown(text string, extractions []
 		}
 		
 		interval := ext.Interval()
-		start := interval.Start()
-		end := interval.End()
+		start := interval.StartPos
+		end := interval.EndPos
 		
 		if start < 0 || end > len(text) || start >= end || start < cursor {
 			continue
@@ -403,10 +403,10 @@ func (e *MarkdownExporter) sortExtractions(extractions []*extraction.Extraction,
 			posJ := 0
 			
 			if sorted[i].Interval() != nil {
-				posI = sorted[i].Interval().Start()
+				posI = sorted[i].Interval().StartPos
 			}
 			if sorted[j].Interval() != nil {
-				posJ = sorted[j].Interval().Start()
+				posJ = sorted[j].Interval().StartPos
 			}
 			
 			if order == SortOrderDesc {
@@ -647,7 +647,7 @@ func (e *MarkdownExporter) extractMetadata(ext *extraction.Extraction) map[strin
 	
 	if ext.Interval() != nil {
 		interval := ext.Interval()
-		metadata["char_span"] = fmt.Sprintf("%d-%d", interval.Start(), interval.End())
+		metadata["char_span"] = fmt.Sprintf("%d-%d", interval.StartPos, interval.EndPos)
 	}
 	
 	if ext.Confidence() > 0 {

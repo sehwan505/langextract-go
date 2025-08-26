@@ -55,7 +55,7 @@ func (g *HTMLGenerator) Generate(ctx context.Context, doc *document.AnnotatedDoc
 		return "", NewValidationError("document cannot be nil", nil)
 	}
 	
-	if doc.Text() == "" {
+	if doc.Text == "" {
 		return "", NewValidationError("document text cannot be empty", nil)
 	}
 	
@@ -69,7 +69,7 @@ func (g *HTMLGenerator) Generate(ctx context.Context, doc *document.AnnotatedDoc
 	}
 	
 	// Filter and validate extractions
-	validExtractions := g.filterValidExtractions(doc.Extractions(), opts.FilterClasses)
+	validExtractions := g.filterValidExtractions(doc.Extractions, opts.FilterClasses)
 	if len(validExtractions) == 0 {
 		return g.generateEmptyVisualization(opts)
 	}
@@ -89,13 +89,13 @@ func (g *HTMLGenerator) Generate(ctx context.Context, doc *document.AnnotatedDoc
 	}
 	
 	// Generate highlighted text
-	highlightedText, err := g.buildHighlightedText(doc.Text(), validExtractions, colorMap, opts)
+	highlightedText, err := g.buildHighlightedText(doc.Text, validExtractions, colorMap, opts)
 	if err != nil {
 		return "", NewHTMLGenerationError("failed to build highlighted text", err)
 	}
 	
 	// Prepare extraction data for JavaScript
-	extractionData, err := g.prepareExtractionData(doc.Text(), validExtractions, colorMap, opts)
+	extractionData, err := g.prepareExtractionData(doc.Text, validExtractions, colorMap, opts)
 	if err != nil {
 		return "", NewHTMLGenerationError("failed to prepare extraction data", err)
 	}
@@ -179,7 +179,7 @@ func (g *HTMLGenerator) filterValidExtractions(extractions []*extraction.Extract
 		}
 		
 		interval := ext.Interval()
-		if interval.Start() < 0 || interval.End() <= interval.Start() {
+		if interval.StartPos < 0 || interval.EndPos <= interval.StartPos {
 			continue
 		}
 		
@@ -204,13 +204,13 @@ func (g *HTMLGenerator) sortExtractionsByPosition(extractions []*extraction.Extr
 		intervalJ := sorted[j].Interval()
 		
 		// Sort by start position first
-		if intervalI.Start() != intervalJ.Start() {
-			return intervalI.Start() < intervalJ.Start()
+		if intervalI.StartPos != intervalJ.StartPos {
+			return intervalI.StartPos < intervalJ.StartPos
 		}
 		
 		// For same start position, longer spans come first (for proper HTML nesting)
-		lengthI := intervalI.End() - intervalI.Start()
-		lengthJ := intervalJ.End() - intervalJ.Start()
+		lengthI := intervalI.EndPos - intervalI.StartPos
+		lengthJ := intervalJ.EndPos - intervalJ.StartPos
 		return lengthI > lengthJ
 	})
 	
@@ -229,8 +229,8 @@ func (g *HTMLGenerator) buildHighlightedText(text string, extractions []*extract
 	
 	for index, ext := range extractions {
 		interval := ext.Interval()
-		startPos := interval.Start()
-		endPos := interval.End()
+		startPos := interval.StartPos
+		endPos := interval.EndPos
 		
 		if startPos < 0 || endPos > len(text) || startPos >= endPos {
 			continue // Skip invalid intervals
@@ -282,7 +282,7 @@ func (g *HTMLGenerator) buildHighlightedText(text string, extractions []*extract
 			if opts != nil && opts.Debug {
 				debugAttr = fmt.Sprintf(` title="Index: %d, Class: %s, Pos: %d-%d"`, 
 					point.SpanIndex, point.Extraction.Class(), 
-					point.Extraction.Interval().Start(), point.Extraction.Interval().End())
+					point.Extraction.Interval().StartPos, point.Extraction.Interval().EndPos)
 			}
 			
 			spanHTML := fmt.Sprintf(`<span class="lx-highlight%s" data-idx="%d" style="background-color:%s;"%s>`,
@@ -344,8 +344,8 @@ func (g *HTMLGenerator) prepareExtractionData(text string, extractions []*extrac
 	
 	for i, ext := range extractions {
 		interval := ext.Interval()
-		startPos := interval.Start()
-		endPos := interval.End()
+		startPos := interval.StartPos
+		endPos := interval.EndPos
 		
 		// Calculate context window
 		contextStart := startPos - contextChars
@@ -445,7 +445,7 @@ func (g *HTMLGenerator) buildAttributesHTML(ext *extraction.Extraction, includeM
 	// Add position information
 	interval := ext.Interval()
 	parts = append(parts, fmt.Sprintf(`<div><strong>position:</strong> [%d-%d]</div>`,
-		interval.Start(), interval.End()))
+		interval.StartPos, interval.EndPos))
 	
 	// Add attributes if available and requested
 	if includeMetadata {
@@ -477,9 +477,9 @@ func (g *HTMLGenerator) extractMetadata(ext *extraction.Extraction) map[string]i
 	metadata["confidence"] = ext.Confidence()
 	
 	interval := ext.Interval()
-	metadata["start_pos"] = interval.Start()
-	metadata["end_pos"] = interval.End()
-	metadata["length"] = interval.End() - interval.Start()
+	metadata["start_pos"] = interval.StartPos
+	metadata["end_pos"] = interval.EndPos
+	metadata["length"] = interval.EndPos - interval.StartPos
 	
 	return metadata
 }
@@ -526,7 +526,7 @@ func (g *HTMLGenerator) getFirstExtractionPos(extractions []*extraction.Extracti
 	}
 	
 	interval := extractions[0].Interval()
-	return fmt.Sprintf("[%d-%d]", interval.Start(), interval.End())
+	return fmt.Sprintf("[%d-%d]", interval.StartPos, interval.EndPos)
 }
 
 // getCustomJavaScript returns custom JavaScript based on options

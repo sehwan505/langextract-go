@@ -51,12 +51,12 @@ func (e *JSONExporter) Export(ctx context.Context, doc *document.AnnotatedDocume
 	
 	// Add document text if requested
 	if opts.IncludeText {
-		exportData.Text = doc.Text()
-		exportData.TextLength = len(doc.Text())
+		exportData.Text = doc.Text
+		exportData.TextLength = len(doc.Text)
 	}
 	
 	// Process extractions
-	validExtractions := e.filterValidExtractions(doc.Extractions(), opts.FilterClasses)
+	validExtractions := e.filterValidExtractions(doc.Extractions, opts.FilterClasses)
 	if opts.SortBy != "" {
 		validExtractions = e.sortExtractions(validExtractions, opts.SortBy, opts.SortOrder)
 	}
@@ -80,7 +80,6 @@ func (e *JSONExporter) Export(ctx context.Context, doc *document.AnnotatedDocume
 	
 	// Marshal to JSON
 	var jsonData []byte
-	var err error
 	
 	if opts.Pretty {
 		jsonData, err = json.MarshalIndent(exportData, "", "  ")
@@ -196,10 +195,10 @@ func (e *JSONExporter) sortExtractions(extractions []*extraction.Extraction, sor
 			posJ := 0
 			
 			if sorted[i].Interval() != nil {
-				posI = sorted[i].Interval().Start()
+				posI = sorted[i].Interval().StartPos
 			}
 			if sorted[j].Interval() != nil {
-				posJ = sorted[j].Interval().Start()
+				posJ = sorted[j].Interval().StartPos
 			}
 			
 			if order == SortOrderDesc {
@@ -268,9 +267,9 @@ func (e *JSONExporter) convertExtractions(extractions []*extraction.Extraction, 
 		// Add position information if requested and available
 		if opts.IncludePositions && ext.Interval() != nil {
 			interval := ext.Interval()
-			jsonExt.StartPos = interval.Start()
-			jsonExt.EndPos = interval.End()
-			jsonExt.Length = interval.End() - interval.Start()
+			jsonExt.StartPos = interval.StartPos
+			jsonExt.EndPos = interval.EndPos
+			jsonExt.Length = interval.EndPos - interval.StartPos
 		}
 		
 		// Add confidence if available
@@ -312,8 +311,8 @@ func (e *JSONExporter) extractMetadata(ext *extraction.Extraction) map[string]in
 	if ext.Interval() != nil {
 		interval := ext.Interval()
 		metadata["char_span"] = map[string]int{
-			"start": interval.Start(),
-			"end":   interval.End(),
+			"start": interval.StartPos,
+			"end":   interval.EndPos,
 		}
 	}
 	
@@ -329,7 +328,7 @@ func (e *JSONExporter) buildMetadata(doc *document.AnnotatedDocument, extraction
 	metadata := make(map[string]interface{})
 	
 	// Document information
-	metadata["document_text_length"] = len(doc.Text())
+	metadata["document_text_length"] = len(doc.Text)
 	metadata["total_extractions"] = len(extractions)
 	
 	// Extraction classes
@@ -398,7 +397,7 @@ func (e *JSONExporter) generateStatistics(extractions []*extraction.Extraction) 
 		// Coverage statistics (if position information is available)
 		if ext.Interval() != nil {
 			interval := ext.Interval()
-			totalCoverage += interval.End() - interval.Start()
+			totalCoverage += interval.EndPos - interval.StartPos
 		}
 	}
 	
