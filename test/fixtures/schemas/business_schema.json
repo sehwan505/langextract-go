@@ -1,0 +1,225 @@
+{
+  "name": "business_entity_extraction",
+  "description": "Schema for extracting business and financial entities from news articles and reports",
+  "classes": [
+    {
+      "name": "company",
+      "description": "Company names and business entities",
+      "required": false,
+      "fields": [
+        {
+          "name": "ticker_symbol",
+          "type": "string",
+          "description": "Stock ticker symbol if mentioned",
+          "pattern": "^[A-Z]{1,5}$",
+          "required": false
+        },
+        {
+          "name": "exchange",
+          "type": "string",
+          "description": "Stock exchange where company is listed",
+          "enum": ["NYSE", "NASDAQ", "AMEX", "other"],
+          "required": false
+        },
+        {
+          "name": "sector",
+          "type": "string",
+          "description": "Business sector or industry",
+          "enum": ["technology", "healthcare", "finance", "energy", "retail", "manufacturing", "other"],
+          "required": false
+        },
+        {
+          "name": "market_cap",
+          "type": "string",
+          "description": "Market capitalization category",
+          "enum": ["small_cap", "mid_cap", "large_cap", "mega_cap"],
+          "required": false
+        }
+      ]
+    },
+    {
+      "name": "person",
+      "description": "People mentioned in business contexts",
+      "required": false,
+      "fields": [
+        {
+          "name": "role",
+          "type": "string",
+          "description": "Person's professional role",
+          "enum": ["CEO", "CFO", "CTO", "president", "director", "manager", "analyst", "investor", "other"],
+          "required": false
+        },
+        {
+          "name": "company",
+          "type": "string",
+          "description": "Company the person is associated with",
+          "required": false
+        }
+      ]
+    },
+    {
+      "name": "financial_metric",
+      "description": "Financial numbers, metrics, and performance indicators",
+      "required": false,
+      "fields": [
+        {
+          "name": "value",
+          "type": "number",
+          "description": "Numeric value of the financial metric",
+          "required": false
+        },
+        {
+          "name": "unit",
+          "type": "string",
+          "description": "Unit or currency of the metric",
+          "enum": ["dollars", "billions", "millions", "percent", "other"],
+          "required": false
+        },
+        {
+          "name": "type",
+          "type": "string",
+          "description": "Type of financial metric",
+          "enum": ["revenue", "profit", "loss", "growth", "margin", "valuation", "other"],
+          "required": false
+        },
+        {
+          "name": "period",
+          "type": "string",
+          "description": "Time period for the metric",
+          "enum": ["quarterly", "annual", "monthly", "weekly", "daily"],
+          "required": false
+        }
+      ]
+    },
+    {
+      "name": "location",
+      "description": "Geographic locations relevant to business operations",
+      "required": false,
+      "fields": [
+        {
+          "name": "type",
+          "type": "string",
+          "description": "Type of location",
+          "enum": ["headquarters", "office", "facility", "city", "state", "country", "other"],
+          "required": false
+        },
+        {
+          "name": "business_relevance",
+          "type": "string",
+          "description": "How this location relates to business operations",
+          "enum": ["headquarters", "manufacturing", "sales", "research", "subsidiary", "other"],
+          "required": false
+        }
+      ]
+    },
+    {
+      "name": "product",
+      "description": "Products, services, and business offerings",
+      "required": false,
+      "fields": [
+        {
+          "name": "category",
+          "type": "string",
+          "description": "Product or service category",
+          "enum": ["software", "hardware", "service", "platform", "application", "other"],
+          "required": false
+        },
+        {
+          "name": "business_model",
+          "type": "string",
+          "description": "Business model for the product",
+          "enum": ["subscription", "one_time", "freemium", "advertising", "other"],
+          "required": false
+        }
+      ]
+    },
+    {
+      "name": "event",
+      "description": "Business events, announcements, and developments",
+      "required": false,
+      "fields": [
+        {
+          "name": "type",
+          "type": "string",
+          "description": "Type of business event",
+          "enum": ["earnings", "acquisition", "merger", "ipo", "product_launch", "partnership", "layoffs", "investment", "other"],
+          "required": false
+        },
+        {
+          "name": "impact",
+          "type": "string",
+          "description": "Expected impact of the event",
+          "enum": ["positive", "negative", "neutral", "mixed"],
+          "required": false
+        }
+      ]
+    },
+    {
+      "name": "market_index",
+      "description": "Stock market indices and benchmarks",
+      "required": false,
+      "fields": [
+        {
+          "name": "type",
+          "type": "string",
+          "description": "Type of market index",
+          "enum": ["stock_index", "sector_index", "global_index", "commodity_index"],
+          "required": false
+        },
+        {
+          "name": "movement",
+          "type": "string",
+          "description": "Direction of index movement if mentioned",
+          "enum": ["up", "down", "flat"],
+          "required": false
+        }
+      ]
+    },
+    {
+      "name": "date",
+      "description": "Dates and temporal references in business contexts",
+      "required": false,
+      "fields": [
+        {
+          "name": "type",
+          "type": "string",
+          "description": "Type of date reference",
+          "enum": ["earnings_date", "quarter_end", "fiscal_year", "announcement", "deadline", "other"],
+          "required": false
+        },
+        {
+          "name": "quarter",
+          "type": "string",
+          "description": "Fiscal quarter if applicable",
+          "enum": ["Q1", "Q2", "Q3", "Q4"],
+          "required": false
+        }
+      ]
+    }
+  ],
+  "globalFields": [
+    {
+      "name": "confidence",
+      "type": "number",
+      "description": "Confidence score for the extraction (0.0 to 1.0)",
+      "minimum": 0.0,
+      "maximum": 1.0,
+      "required": false
+    },
+    {
+      "name": "sentiment",
+      "type": "string",
+      "description": "Sentiment associated with the entity mention",
+      "enum": ["positive", "negative", "neutral"],
+      "required": false
+    },
+    {
+      "name": "relevance_score",
+      "type": "number",
+      "description": "Relevance score of the entity to the overall document",
+      "minimum": 0.0,
+      "maximum": 1.0,
+      "required": false
+    }
+  ]
+}

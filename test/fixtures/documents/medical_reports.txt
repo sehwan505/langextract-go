@@ -1,0 +1,53 @@
+Patient Report #1 - Dr. Sarah Johnson - Memorial Hospital
+=========================================================
+
+Patient: John Michael Davis
+Age: 45
+DOB: 1978-03-15
+MRN: MH-2023-001234
+
+Chief Complaint:
+The patient presents with chest pain and shortness of breath that started approximately 3 hours ago.
+
+History of Present Illness:
+Mr. Davis is a 45-year-old male with a history of hypertension and diabetes mellitus type 2, who presented to the Emergency Department at Memorial Hospital with acute onset of severe chest pain. The pain is described as crushing, substernal, radiating to the left arm and jaw. Associated symptoms include diaphoresis, nausea, and dyspnea. Patient reports similar but milder episodes over the past week.
+
+Past Medical History:
+- Hypertension diagnosed in 2015
+- Type 2 Diabetes Mellitus diagnosed in 2018
+- Hyperlipidemia
+- Former smoker (quit in 2020)
+
+Current Medications:
+- Metformin 1000mg twice daily
+- Lisinopril 10mg daily
+- Atorvastatin 40mg daily
+- Aspirin 81mg daily
+
+Physical Examination:
+Vital Signs: BP 160/95, HR 102, RR 22, Temp 98.6°F, O2 Sat 94% on room air
+
+General: Patient appears anxious and diaphoretic, in moderate distress
+
+Cardiovascular: Tachycardic, regular rhythm, no murmurs, rubs, or gallops appreciated. JVD not elevated.
+
+Pulmonary: Bilateral crackles at the bases, otherwise clear to auscultation
+
+Assessment and Plan:
+1. Acute ST-elevation myocardial infarction (STEMI)
+   - Patient will undergo emergent cardiac catheterization
+   - Started on dual antiplatelet therapy
+   - Heparin protocol initiated
+
+2. Acute heart failure
+   - Furosemide 40mg IV given
+   - Monitor I/O, daily weights
+
+3. Diabetes management
+   - Continue home metformin
+   - Sliding scale insulin per protocol
+
+Attending Physician: Dr. Sarah Johnson, MD
+Cardiology Consult: Dr. Michael Thompson, MD
+Date: 2023-11-15
+Location: Memorial Hospital Emergency Department, Seattle, WA

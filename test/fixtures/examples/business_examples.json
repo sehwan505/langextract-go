@@ -1,0 +1,305 @@
+[
+  {
+    "text": "Apple Inc. (NASDAQ: AAPL) reported quarterly revenue of $89.5 billion, CEO Tim Cook announced from Cupertino.",
+    "extractions": [
+      {
+        "extraction_class": "company",
+        "extraction_text": "Apple Inc.",
+        "char_interval": {
+          "start_pos": 0,
+          "end_pos": 10
+        },
+        "attributes": {
+          "ticker_symbol": "AAPL",
+          "exchange": "NASDAQ",
+          "sector": "technology",
+          "market_cap": "mega_cap",
+          "confidence": 0.98,
+          "sentiment": "neutral"
+        }
+      },
+      {
+        "extraction_class": "financial_metric",
+        "extraction_text": "$89.5 billion",
+        "char_interval": {
+          "start_pos": 57,
+          "end_pos": 70
+        },
+        "attributes": {
+          "value": 89.5,
+          "unit": "billions",
+          "type": "revenue",
+          "period": "quarterly",
+          "confidence": 0.95,
+          "sentiment": "positive"
+        }
+      },
+      {
+        "extraction_class": "person",
+        "extraction_text": "Tim Cook",
+        "char_interval": {
+          "start_pos": 76,
+          "end_pos": 84
+        },
+        "attributes": {
+          "role": "CEO",
+          "company": "Apple Inc.",
+          "confidence": 0.97,
+          "sentiment": "neutral"
+        }
+      },
+      {
+        "extraction_class": "location",
+        "extraction_text": "Cupertino",
+        "char_interval": {
+          "start_pos": 100,
+          "end_pos": 109
+        },
+        "attributes": {
+          "type": "headquarters",
+          "business_relevance": "headquarters",
+          "confidence": 0.92,
+          "sentiment": "neutral"
+        }
+      }
+    ]
+  },
+  {
+    "text": "Microsoft Corporation's Azure cloud services grew 29% year-over-year, outperforming Amazon Web Services.",
+    "extractions": [
+      {
+        "extraction_class": "company",
+        "extraction_text": "Microsoft Corporation",
+        "char_interval": {
+          "start_pos": 0,
+          "end_pos": 21
+        },
+        "attributes": {
+          "ticker_symbol": "MSFT",
+          "exchange": "NASDAQ",
+          "sector": "technology",
+          "market_cap": "mega_cap",
+          "confidence": 0.96,
+          "sentiment": "positive"
+        }
+      },
+      {
+        "extraction_class": "product",
+        "extraction_text": "Azure",
+        "char_interval": {
+          "start_pos": 24,
+          "end_pos": 29
+        },
+        "attributes": {
+          "category": "service",
+          "business_model": "subscription",
+          "confidence": 0.94,
+          "sentiment": "positive"
+        }
+      },
+      {
+        "extraction_class": "financial_metric",
+        "extraction_text": "29%",
+        "char_interval": {
+          "start_pos": 51,
+          "end_pos": 54
+        },
+        "attributes": {
+          "value": 29,
+          "unit": "percent",
+          "type": "growth",
+          "period": "annual",
+          "confidence": 0.98,
+          "sentiment": "positive"
+        }
+      },
+      {
+        "extraction_class": "company",
+        "extraction_text": "Amazon Web Services",
+        "char_interval": {
+          "start_pos": 84,
+          "end_pos": 103
+        },
+        "attributes": {
+          "ticker_symbol": "AMZN",
+          "sector": "technology",
+          "confidence": 0.95,
+          "sentiment": "neutral"
+        }
+      }
+    ]
+  },
+  {
+    "text": "The NASDAQ Composite Index gained 2.3% following strong earnings from tech giants this quarter.",
+    "extractions": [
+      {
+        "extraction_class": "market_index",
+        "extraction_text": "NASDAQ Composite Index",
+        "char_interval": {
+          "start_pos": 4,
+          "end_pos": 26
+        },
+        "attributes": {
+          "type": "stock_index",
+          "movement": "up",
+          "confidence": 0.97,
+          "sentiment": "positive"
+        }
+      },
+      {
+        "extraction_class": "financial_metric",
+        "extraction_text": "2.3%",
+        "char_interval": {
+          "start_pos": 34,
+          "end_pos": 38
+        },
+        "attributes": {
+          "value": 2.3,
+          "unit": "percent",
+          "type": "growth",
+          "confidence": 0.99,
+          "sentiment": "positive"
+        }
+      },
+      {
+        "extraction_class": "event",
+        "extraction_text": "strong earnings",
+        "char_interval": {
+          "start_pos": 49,
+          "end_pos": 64
+        },
+        "attributes": {
+          "type": "earnings",
+          "impact": "positive",
+          "confidence": 0.88,
+          "sentiment": "positive"
+        }
+      }
+    ]
+  },
+  {
+    "text": "Meta Platforms Inc. reported better-than-expected Q3 results with $34.1 billion revenue from advertising.",
+    "extractions": [
+      {
+        "extraction_class": "company",
+        "extraction_text": "Meta Platforms Inc.",
+        "char_interval": {
+          "start_pos": 0,
+          "end_pos": 19
+        },
+        "attributes": {
+          "ticker_symbol": "META",
+          "exchange": "NASDAQ",
+          "sector": "technology",
+          "confidence": 0.96,
+          "sentiment": "positive"
+        }
+      },
+      {
+        "extraction_class": "event",
+        "extraction_text": "better-than-expected Q3 results",
+        "char_interval": {
+          "start_pos": 29,
+          "end_pos": 60
+        },
+        "attributes": {
+          "type": "earnings",
+          "impact": "positive",
+          "confidence": 0.92,
+          "sentiment": "positive"
+        }
+      },
+      {
+        "extraction_class": "financial_metric",
+        "extraction_text": "$34.1 billion",
+        "char_interval": {
+          "start_pos": 66,
+          "end_pos": 79
+        },
+        "attributes": {
+          "value": 34.1,
+          "unit": "billions",
+          "type": "revenue",
+          "period": "quarterly",
+          "confidence": 0.97,
+          "sentiment": "positive"
+        }
+      },
+      {
+        "extraction_class": "date",
+        "extraction_text": "Q3",
+        "char_interval": {
+          "start_pos": 50,
+          "end_pos": 52
+        },
+        "attributes": {
+          "type": "quarter_end",
+          "quarter": "Q3",
+          "confidence": 0.99,
+          "sentiment": "neutral"
+        }
+      }
+    ]
+  },
+  {
+    "text": "Goldman Sachs analyst Jennifer Martinez upgraded the stock to buy with a $150 price target.",
+    "extractions": [
+      {
+        "extraction_class": "company",
+        "extraction_text": "Goldman Sachs",
+        "char_interval": {
+          "start_pos": 0,
+          "end_pos": 13
+        },
+        "attributes": {
+          "sector": "finance",
+          "confidence": 0.95,
+          "sentiment": "positive"
+        }
+      },
+      {
+        "extraction_class": "person",
+        "extraction_text": "Jennifer Martinez",
+        "char_interval": {
+          "start_pos": 22,
+          "end_pos": 39
+        },
+        "attributes": {
+          "role": "analyst",
+          "company": "Goldman Sachs",
+          "confidence": 0.93,
+          "sentiment": "positive"
+        }
+      },
+      {
+        "extraction_class": "event",
+        "extraction_text": "upgraded the stock",
+        "char_interval": {
+          "start_pos": 40,
+          "end_pos": 58
+        },
+        "attributes": {
+          "type": "investment",
+          "impact": "positive",
+          "confidence": 0.89,
+          "sentiment": "positive"
+        }
+      },
+      {
+        "extraction_class": "financial_metric",
+        "extraction_text": "$150",
+        "char_interval": {
+          "start_pos": 72,
+          "end_pos": 76
+        },
+        "attributes": {
+          "value": 150,
+          "unit": "dollars",
+          "type": "valuation",
+          "confidence": 0.94,
+          "sentiment": "positive"
+        }
+      }
+    ]
+  }
+]

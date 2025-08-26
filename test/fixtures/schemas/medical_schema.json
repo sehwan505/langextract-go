@@ -1,0 +1,210 @@
+{
+  "name": "medical_entity_extraction",
+  "description": "Schema for extracting medical entities from clinical documents",
+  "classes": [
+    {
+      "name": "person",
+      "description": "Person names including patients, doctors, and medical staff",
+      "required": false,
+      "fields": [
+        {
+          "name": "role",
+          "type": "string",
+          "description": "Person's role (patient, doctor, nurse, etc.)",
+          "enum": ["patient", "doctor", "nurse", "therapist", "administrator", "other"]
+        },
+        {
+          "name": "title",
+          "type": "string",
+          "description": "Professional title if applicable",
+          "required": false
+        },
+        {
+          "name": "specialty",
+          "type": "string",
+          "description": "Medical specialty for healthcare providers",
+          "required": false
+        }
+      ]
+    },
+    {
+      "name": "condition",
+      "description": "Medical conditions, diseases, and diagnoses",
+      "required": false,
+      "fields": [
+        {
+          "name": "severity",
+          "type": "string",
+          "description": "Condition severity level",
+          "enum": ["mild", "moderate", "severe", "critical"],
+          "required": false
+        },
+        {
+          "name": "status",
+          "type": "string",
+          "description": "Current status of the condition",
+          "enum": ["active", "resolved", "chronic", "acute", "history"],
+          "required": false
+        },
+        {
+          "name": "icd_code",
+          "type": "string",
+          "description": "ICD-10 diagnostic code if mentioned",
+          "pattern": "^[A-Z][0-9]{2}(\\.[0-9]{1,2})?$",
+          "required": false
+        }
+      ]
+    },
+    {
+      "name": "medication",
+      "description": "Medications, drugs, and pharmaceutical products",
+      "required": false,
+      "fields": [
+        {
+          "name": "dosage",
+          "type": "string",
+          "description": "Medication dosage if specified",
+          "required": false
+        },
+        {
+          "name": "frequency",
+          "type": "string",
+          "description": "How often the medication is taken",
+          "enum": ["daily", "twice daily", "three times daily", "weekly", "as needed", "other"],
+          "required": false
+        },
+        {
+          "name": "route",
+          "type": "string",
+          "description": "Route of administration",
+          "enum": ["oral", "IV", "IM", "topical", "inhaled", "other"],
+          "required": false
+        }
+      ]
+    },
+    {
+      "name": "organization",
+      "description": "Healthcare organizations, hospitals, clinics",
+      "required": false,
+      "fields": [
+        {
+          "name": "type",
+          "type": "string",
+          "description": "Type of healthcare organization",
+          "enum": ["hospital", "clinic", "practice", "laboratory", "pharmacy", "other"],
+          "required": false
+        },
+        {
+          "name": "department",
+          "type": "string",
+          "description": "Specific department if mentioned",
+          "required": false
+        }
+      ]
+    },
+    {
+      "name": "location",
+      "description": "Geographic locations including cities, states, addresses",
+      "required": false,
+      "fields": [
+        {
+          "name": "type",
+          "type": "string",
+          "description": "Type of location",
+          "enum": ["city", "state", "country", "address", "facility", "other"],
+          "required": false
+        }
+      ]
+    },
+    {
+      "name": "procedure",
+      "description": "Medical procedures, tests, and interventions",
+      "required": false,
+      "fields": [
+        {
+          "name": "type",
+          "type": "string",
+          "description": "Type of procedure",
+          "enum": ["diagnostic", "therapeutic", "surgical", "preventive", "other"],
+          "required": false
+        },
+        {
+          "name": "status",
+          "type": "string",
+          "description": "Procedure status",
+          "enum": ["planned", "completed", "cancelled", "in_progress"],
+          "required": false
+        }
+      ]
+    },
+    {
+      "name": "vital_sign",
+      "description": "Vital signs and measurements",
+      "required": false,
+      "fields": [
+        {
+          "name": "value",
+          "type": "number",
+          "description": "Numeric value of the measurement",
+          "required": false
+        },
+        {
+          "name": "unit",
+          "type": "string",
+          "description": "Unit of measurement",
+          "required": false
+        },
+        {
+          "name": "type",
+          "type": "string",
+          "description": "Type of vital sign",
+          "enum": ["blood_pressure", "heart_rate", "temperature", "respiratory_rate", "oxygen_saturation", "other"],
+          "required": false
+        }
+      ]
+    },
+    {
+      "name": "date",
+      "description": "Dates and temporal references",
+      "required": false,
+      "fields": [
+        {
+          "name": "type",
+          "type": "string",
+          "description": "Type of date reference",
+          "enum": ["admission", "discharge", "diagnosis", "procedure", "birth", "other"],
+          "required": false
+        },
+        {
+          "name": "format",
+          "type": "string",
+          "description": "Original date format found in text",
+          "required": false
+        }
+      ]
+    }
+  ],
+  "globalFields": [
+    {
+      "name": "confidence",
+      "type": "number",
+      "description": "Confidence score for the extraction (0.0 to 1.0)",
+      "minimum": 0.0,
+      "maximum": 1.0,
+      "required": false
+    },
+    {
+      "name": "context",
+      "type": "string",
+      "description": "Additional context surrounding the extraction",
+      "required": false
+    },
+    {
+      "name": "source_section",
+      "type": "string",
+      "description": "Document section where extraction was found",
+      "enum": ["chief_complaint", "history", "physical_exam", "assessment", "plan", "medications", "other"],
+      "required": false
+    }
+  ]
+}

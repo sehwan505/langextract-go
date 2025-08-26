@@ -1,0 +1,187 @@
+{
+  "document_id": "business_news_001",
+  "text": "Tech Giants Report Q3 Earnings: Mixed Results Across Silicon Valley\n====================================================================\n\nSAN FRANCISCO, CA - November 1, 2023 - Major technology companies released their third-quarter earnings reports this week, showing varied performance across the sector.",
+  "extraction_metadata": {
+    "model_id": "test_model", 
+    "schema_name": "business_entity_extraction",
+    "extraction_timestamp": "2023-11-15T14:45:00Z",
+    "total_extractions": 12,
+    "processing_time_ms": 2100
+  },
+  "extractions": [
+    {
+      "extraction_class": "event",
+      "extraction_text": "Q3 Earnings",
+      "char_interval": {
+        "start_pos": 18,
+        "end_pos": 29
+      },
+      "token_interval": {
+        "start_token": 3,
+        "end_token": 5
+      },
+      "alignment_status": "exact",
+      "extraction_index": 0,
+      "attributes": {
+        "type": "earnings",
+        "impact": "mixed",
+        "confidence": 0.94,
+        "sentiment": "neutral",
+        "relevance_score": 0.95
+      }
+    },
+    {
+      "extraction_class": "location",
+      "extraction_text": "Silicon Valley",
+      "char_interval": {
+        "start_pos": 54,
+        "end_pos": 68
+      },
+      "token_interval": {
+        "start_token": 9,
+        "end_token": 11
+      },
+      "alignment_status": "exact",
+      "extraction_index": 1,
+      "attributes": {
+        "type": "other",
+        "business_relevance": "other",
+        "confidence": 0.92,
+        "sentiment": "neutral",
+        "relevance_score": 0.85
+      }
+    },
+    {
+      "extraction_class": "location",
+      "extraction_text": "SAN FRANCISCO",
+      "char_interval": {
+        "start_pos": 104,
+        "end_pos": 117
+      },
+      "token_interval": {
+        "start_token": 18,
+        "end_token": 20
+      },
+      "alignment_status": "exact",
+      "extraction_index": 2,
+      "attributes": {
+        "type": "city",
+        "business_relevance": "other",
+        "confidence": 0.98,
+        "sentiment": "neutral",
+        "relevance_score": 0.70
+      }
+    },
+    {
+      "extraction_class": "location",
+      "extraction_text": "CA",
+      "char_interval": {
+        "start_pos": 119,
+        "end_pos": 121
+      },
+      "token_interval": {
+        "start_token": 21,
+        "end_token": 22
+      },
+      "alignment_status": "exact",
+      "extraction_index": 3,
+      "attributes": {
+        "type": "state",
+        "business_relevance": "other",
+        "confidence": 0.95,
+        "sentiment": "neutral",
+        "relevance_score": 0.60
+      }
+    },
+    {
+      "extraction_class": "date",
+      "extraction_text": "November 1, 2023",
+      "char_interval": {
+        "start_pos": 124,
+        "end_pos": 140
+      },
+      "token_interval": {
+        "start_token": 23,
+        "end_token": 26
+      },
+      "alignment_status": "exact",
+      "extraction_index": 4,
+      "attributes": {
+        "type": "announcement",
+        "format": "Month DD, YYYY",
+        "confidence": 0.99,
+        "sentiment": "neutral",
+        "relevance_score": 0.80
+      }
+    },
+    {
+      "extraction_class": "date",
+      "extraction_text": "third-quarter",
+      "char_interval": {
+        "start_pos": 185,
+        "end_pos": 198
+      },
+      "token_interval": {
+        "start_token": 33,
+        "end_token": 35
+      },
+      "alignment_status": "exact",
+      "extraction_index": 5,
+      "attributes": {
+        "type": "quarter_end",
+        "quarter": "Q3",
+        "confidence": 0.93,
+        "sentiment": "neutral",
+        "relevance_score": 0.90
+      }
+    },
+    {
+      "extraction_class": "event",
+      "extraction_text": "earnings reports",
+      "char_interval": {
+        "start_pos": 199,
+        "end_pos": 215
+      },
+      "token_interval": {
+        "start_token": 35,
+        "end_token": 37
+      },
+      "alignment_status": "exact",
+      "extraction_index": 6,
+      "attributes": {
+        "type": "earnings",
+        "impact": "mixed",
+        "confidence": 0.96,
+        "sentiment": "neutral",
+        "relevance_score": 0.95
+      }
+    }
+  ],
+  "extraction_statistics": {
+    "entities_by_class": {
+      "event": 2,
+      "location": 3,
+      "date": 2
+    },
+    "confidence_distribution": {
+      "high_confidence": 6,
+      "medium_confidence": 1,
+      "low_confidence": 0
+    },
+    "alignment_quality": {
+      "exact": 7,
+      "approximate": 0,
+      "poor": 0
+    },
+    "sentiment_distribution": {
+      "positive": 0,
+      "negative": 0,
+      "neutral": 7
+    }
+  },
+  "validation_results": {
+    "schema_compliant": true,
+    "validation_errors": [],
+    "validation_warnings": []
+  }
+}

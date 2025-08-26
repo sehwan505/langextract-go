@@ -1,0 +1,225 @@
+[
+  {
+    "text": "Dr. Sarah Johnson examined the patient at Memorial Hospital.",
+    "extractions": [
+      {
+        "extraction_class": "person",
+        "extraction_text": "Dr. Sarah Johnson",
+        "char_interval": {
+          "start_pos": 0,
+          "end_pos": 17
+        },
+        "attributes": {
+          "role": "doctor",
+          "title": "Dr.",
+          "confidence": 0.95,
+          "source_section": "other"
+        }
+      },
+      {
+        "extraction_class": "organization",
+        "extraction_text": "Memorial Hospital",
+        "char_interval": {
+          "start_pos": 44,
+          "end_pos": 61
+        },
+        "attributes": {
+          "type": "hospital",
+          "confidence": 0.98,
+          "source_section": "other"
+        }
+      }
+    ]
+  },
+  {
+    "text": "Patient diagnosed with Type 2 diabetes mellitus and prescribed metformin 1000mg twice daily.",
+    "extractions": [
+      {
+        "extraction_class": "condition",
+        "extraction_text": "Type 2 diabetes mellitus",
+        "char_interval": {
+          "start_pos": 23,
+          "end_pos": 47
+        },
+        "attributes": {
+          "severity": "moderate",
+          "status": "active",
+          "confidence": 0.92,
+          "source_section": "assessment"
+        }
+      },
+      {
+        "extraction_class": "medication",
+        "extraction_text": "metformin",
+        "char_interval": {
+          "start_pos": 62,
+          "end_pos": 71
+        },
+        "attributes": {
+          "dosage": "1000mg",
+          "frequency": "twice daily",
+          "route": "oral",
+          "confidence": 0.94,
+          "source_section": "plan"
+        }
+      }
+    ]
+  },
+  {
+    "text": "Vital signs: BP 140/90 mmHg, HR 85 bpm, Temperature 98.6°F, O2 sat 98%",
+    "extractions": [
+      {
+        "extraction_class": "vital_sign",
+        "extraction_text": "140/90",
+        "char_interval": {
+          "start_pos": 16,
+          "end_pos": 22
+        },
+        "attributes": {
+          "type": "blood_pressure",
+          "unit": "mmHg",
+          "confidence": 0.98,
+          "source_section": "physical_exam"
+        }
+      },
+      {
+        "extraction_class": "vital_sign",
+        "extraction_text": "85",
+        "char_interval": {
+          "start_pos": 32,
+          "end_pos": 34
+        },
+        "attributes": {
+          "type": "heart_rate",
+          "value": 85,
+          "unit": "bpm",
+          "confidence": 0.96,
+          "source_section": "physical_exam"
+        }
+      },
+      {
+        "extraction_class": "vital_sign",
+        "extraction_text": "98.6°F",
+        "char_interval": {
+          "start_pos": 52,
+          "end_pos": 58
+        },
+        "attributes": {
+          "type": "temperature",
+          "value": 98.6,
+          "unit": "°F",
+          "confidence": 0.97,
+          "source_section": "physical_exam"
+        }
+      },
+      {
+        "extraction_class": "vital_sign",
+        "extraction_text": "98%",
+        "char_interval": {
+          "start_pos": 68,
+          "end_pos": 71
+        },
+        "attributes": {
+          "type": "oxygen_saturation",
+          "value": 98,
+          "unit": "%",
+          "confidence": 0.95,
+          "source_section": "physical_exam"
+        }
+      }
+    ]
+  },
+  {
+    "text": "Patient underwent cardiac catheterization on March 15, 2023 at Seattle Heart Institute.",
+    "extractions": [
+      {
+        "extraction_class": "procedure",
+        "extraction_text": "cardiac catheterization",
+        "char_interval": {
+          "start_pos": 18,
+          "end_pos": 41
+        },
+        "attributes": {
+          "type": "diagnostic",
+          "status": "completed",
+          "confidence": 0.93,
+          "source_section": "plan"
+        }
+      },
+      {
+        "extraction_class": "date",
+        "extraction_text": "March 15, 2023",
+        "char_interval": {
+          "start_pos": 45,
+          "end_pos": 59
+        },
+        "attributes": {
+          "type": "procedure",
+          "format": "Month DD, YYYY",
+          "confidence": 0.99,
+          "source_section": "plan"
+        }
+      },
+      {
+        "extraction_class": "organization",
+        "extraction_text": "Seattle Heart Institute",
+        "char_interval": {
+          "start_pos": 63,
+          "end_pos": 86
+        },
+        "attributes": {
+          "type": "clinic",
+          "department": "cardiology",
+          "confidence": 0.96,
+          "source_section": "plan"
+        }
+      },
+      {
+        "extraction_class": "location",
+        "extraction_text": "Seattle",
+        "char_interval": {
+          "start_pos": 63,
+          "end_pos": 70
+        },
+        "attributes": {
+          "type": "city",
+          "confidence": 0.94,
+          "source_section": "plan"
+        }
+      }
+    ]
+  },
+  {
+    "text": "Chief complaint: 45-year-old male with acute chest pain and shortness of breath.",
+    "extractions": [
+      {
+        "extraction_class": "condition",
+        "extraction_text": "acute chest pain",
+        "char_interval": {
+          "start_pos": 40,
+          "end_pos": 56
+        },
+        "attributes": {
+          "severity": "severe",
+          "status": "acute",
+          "confidence": 0.89,
+          "source_section": "chief_complaint"
+        }
+      },
+      {
+        "extraction_class": "condition",
+        "extraction_text": "shortness of breath",
+        "char_interval": {
+          "start_pos": 61,
+          "end_pos": 80
+        },
+        "attributes": {
+          "severity": "moderate",
+          "status": "acute",
+          "confidence": 0.91,
+          "source_section": "chief_complaint"
+        }
+      }
+    ]
+  }
+]
