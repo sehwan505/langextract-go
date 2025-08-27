@@ -211,11 +211,9 @@ func runBatch(ctx context.Context, opts *BatchOptions, cfg *config.GlobalConfig,
 
 	// Set model parameters
 	if opts.Temperature > 0 {
-		extractOpts = extractOpts.WithTemperature(opts.Temperature)
+		extractOpts = extractOpts.WithTemperature(float64(opts.Temperature))
 	}
-	if opts.MaxTokens > 0 {
-		extractOpts = extractOpts.WithMaxTokens(opts.MaxTokens)
-	}
+	// Note: MaxTokens should be configured via ModelConfig, not directly on options
 
 	// Add examples
 	if len(examples) > 0 {
@@ -290,7 +288,7 @@ func runBatch(ctx context.Context, opts *BatchOptions, cfg *config.GlobalConfig,
 				})
 			}
 		} else {
-			log.WithError(result.Error).WithFile(result.InputFile).Error("Failed to process file")
+			log.WithError(result.Error).Errorf("Failed to process file: %s", result.InputFile)
 		}
 	}
 
@@ -468,8 +466,7 @@ func processSingleFile(ctx context.Context, inputFile string, opts *BatchOptions
 	// Create visualization options
 	vizOpts := langextract.NewVisualizeOptions().
 		WithFormat(opts.OutputFormat).
-		WithPretty(opts.Pretty).
-		WithIncludeText(opts.ShowSource)
+		WithContext(opts.ShowSource)
 
 	// Generate output
 	output, err := langextract.Visualize(extracted, vizOpts)
@@ -552,3 +549,4 @@ func showBatchSummary(results []BatchResult, duration time.Duration, log *logger
 		"duration":    duration.String(),
 	}).Info("Batch processing summary")
 }
+

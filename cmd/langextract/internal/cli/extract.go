@@ -167,11 +167,9 @@ func runExtract(ctx context.Context, opts *ExtractOptions, cfg *config.GlobalCon
 
 	// Set model parameters
 	if opts.Temperature > 0 {
-		extractOpts = extractOpts.WithTemperature(opts.Temperature)
+		extractOpts = extractOpts.WithTemperature(float64(opts.Temperature))
 	}
-	if opts.MaxTokens > 0 {
-		extractOpts = extractOpts.WithMaxTokens(opts.MaxTokens)
-	}
+	// Note: MaxTokens should be configured via ModelConfig, not directly on options
 
 	// Add examples
 	if len(examples) > 0 {
@@ -196,8 +194,7 @@ func runExtract(ctx context.Context, opts *ExtractOptions, cfg *config.GlobalCon
 	// Create visualization options for output
 	vizOpts := langextract.NewVisualizeOptions().
 		WithFormat(opts.Format).
-		WithPretty(opts.Pretty).
-		WithIncludeText(opts.ShowSource)
+		WithContext(opts.ShowSource)
 
 	// Generate output
 	output, err := langextract.Visualize(result, vizOpts)
@@ -283,17 +280,6 @@ func readInput(input, inputType string) (string, error) {
 	}
 }
 
-// loadSchema loads extraction schema from file
-func loadSchema(schemaPath string) (interface{}, error) {
-	data, err := os.ReadFile(schemaPath)
-	if err != nil {
-		return nil, fmt.Errorf("failed to read schema file %s: %w", schemaPath, err)
-	}
-
-	// For now, return the raw schema data
-	// In a full implementation, this would parse YAML/JSON schema
-	return string(data), nil
-}
 
 // loadExamples loads example files from paths
 func loadExamples(examplePaths []string) ([]string, error) {

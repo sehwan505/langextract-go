@@ -3,9 +3,11 @@ package visualization
 import (
 	"context"
 	"fmt"
+	"strings"
 	"sync"
 
 	"github.com/sehwan505/langextract-go/pkg/document"
+	"github.com/sehwan505/langextract-go/pkg/extraction"
 )
 
 // DefaultVisualizer is the main visualizer that orchestrates different generators and exporters
@@ -290,7 +292,7 @@ func (v *DefaultVisualizer) convertToVisualizationOptions(exportOpts *ExportOpti
 
 // generatePlainText generates a simple plain text representation
 func (v *DefaultVisualizer) generatePlainText(doc *document.AnnotatedDocument, opts *VisualizationOptions) string {
-	if doc == nil || len(doc.Extractions()) == 0 {
+	if doc == nil || len(doc.Extractions) == 0 {
 		return "No extractions found."
 	}
 	
@@ -299,9 +301,9 @@ func (v *DefaultVisualizer) generatePlainText(doc *document.AnnotatedDocument, o
 	result = append(result, "")
 	
 	// Filter extractions if needed
-	extractions := doc.Extractions()
+	extractions := doc.Extractions
 	if len(opts.FilterClasses) > 0 {
-		var filtered []*document.Extraction
+		var filtered []*extraction.Extraction
 		classSet := make(map[string]bool)
 		for _, class := range opts.FilterClasses {
 			classSet[class] = true
@@ -328,7 +330,7 @@ func (v *DefaultVisualizer) generatePlainText(doc *document.AnnotatedDocument, o
 		
 		if ext.Interval() != nil {
 			interval := ext.Interval()
-			result = append(result, fmt.Sprintf("   Position: %d-%d", interval.Start(), interval.End()))
+			result = append(result, fmt.Sprintf("   Position: %d-%d", interval.StartPos, interval.EndPos))
 		}
 		
 		if ext.Confidence() > 0 {

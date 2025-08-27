@@ -180,14 +180,14 @@ func runVisualize(ctx context.Context, opts *VisualizeOptions, cfg *config.Globa
 	for _, inputFile := range inputFiles {
 		result, err := loadExtractionResults(inputFile)
 		if err != nil {
-			log.WithError(err).WithFile(inputFile).Warning("Failed to load extraction results")
+			log.WithError(err).Warningf("Failed to load extraction results: %s", inputFile)
 			continue
 		}
 
 		// Validate if requested
 		if opts.Validate {
 			if err := validateExtractionResults(result); err != nil {
-				log.WithError(err).WithFile(inputFile).Warning("Validation failed")
+				log.WithError(err).Warningf("Validation failed: %s", inputFile)
 				continue
 			}
 		}
@@ -330,23 +330,15 @@ func validateExtractionResults(result *document.AnnotatedDocument) error {
 func createVisualizationOptions(opts *VisualizeOptions) *langextract.VisualizeOptions {
 	vizOpts := langextract.NewVisualizeOptions().
 		WithFormat(opts.Format).
-		WithPretty(opts.Pretty).
-		WithIncludeText(opts.ShowSource)
+		WithContext(opts.ShowSource)
 
 	// Add context window if specified
 	if opts.ContextWindow > 0 {
-		vizOpts = vizOpts.WithContextChars(opts.ContextWindow)
+		vizOpts = vizOpts.WithContextWindow(opts.ContextWindow)
 	}
 
-	// Add filtering options
-	if len(opts.FilterTypes) > 0 {
-		vizOpts = vizOpts.WithFilterClasses(opts.FilterTypes)
-	}
-
-	// Add CSV-specific options
-	if opts.Format == "csv" {
-		vizOpts = vizOpts.WithCSVDelimiter(opts.CSVDelimiter)
-	}
+	// Note: Filtering and CSV delimiter options are not yet implemented in the core API
+	// TODO: Add WithFilterClasses and WithCSVDelimiter methods to VisualizeOptions
 
 	return vizOpts
 }
@@ -382,7 +374,7 @@ func generateMultipleVisualizations(results []*document.AnnotatedDocument,
 		outputFile := filepath.Join(opts.Output, fmt.Sprintf("visualization_%d.%s", i+1, opts.Format))
 		
 		if err := writeVisualizationOutput(output, outputFile, opts.Format); err != nil {
-			log.WithError(err).WithFile(outputFile).Warning("Failed to write visualization")
+			log.WithError(err).Warningf("Failed to write visualization: %s", outputFile)
 			continue
 		}
 	}

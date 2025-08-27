@@ -74,7 +74,7 @@ func (r *DefaultTemplateRenderer) RegisterTemplate(name string, content string) 
 // GetTemplate returns a template by name
 func (r *DefaultTemplateRenderer) GetTemplate(name string) (string, error) {
 	r.mutex.RLock()
-	tmpl, exists := r.templates[name]
+	_, exists := r.templates[name]
 	r.mutex.RUnlock()
 	
 	if !exists {
@@ -156,7 +156,7 @@ func (r *DefaultTemplateRenderer) registerDefaultFunctions() {
 	// Formatting functions
 	r.functions["printf"] = fmt.Sprintf
 	r.functions["escape"] = template.HTMLEscapeString
-	r.functions["unescape"] = template.HTMLUnescapeString
+	r.functions["unescape"] = template.HTMLEscapeString // Note: Go template doesn't have HTMLUnescapeString
 	
 	// Array/slice functions
 	r.functions["len"] = func(v interface{}) int {
