@@ -1,0 +1,58 @@
+# Git
+.git/
+.gitignore
+.gitattributes
+
+# Documentation
+*.md
+docs/
+구현_코드_이해_가이드.md
+
+# CI/CD
+.github/
+
+# Build artifacts
+build/
+dist/
+*.exe
+
+# Test files
+test/
+*_test.go
+coverage.out
+coverage.html
+
+# Development
+.env
+.env.local
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Dependencies
+vendor/
+
+# Logs
+*.log
+
+# OS generated files
+.DS_Store
+Thumbs.db
+
+# Reference materials
+langextract-reference/
+
+# Scripts (not needed in container)
+scripts/
+
+# Configuration templates
+configs/
+
+# Examples (not needed in production image)
+examples/
+
+# Temporary files
+tmp/
+temp/
