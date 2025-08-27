@@ -1,0 +1,305 @@
+name: Security Scan
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main, develop ]
+  schedule:
+    # Run security scan daily at 02:00 UTC
+    - cron: '0 2 * * *'
+  workflow_dispatch:
+
+jobs:
+  # Static security analysis with gosec
+  gosec:
+    name: Gosec Security Scanner
+    runs-on: ubuntu-latest
+    permissions:
+      security-events: write
+    
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Set up Go
+      uses: actions/setup-go@v5
+      with:
+        go-version: '1.21'
+    
+    - name: Download dependencies
+      run: go mod download
+    
+    - name: Install gosec
+      run: go install github.com/securecodewarrior/gosec/v2/cmd/gosec@latest
+    
+    - name: Run gosec scanner
+      run: |
+        gosec -fmt sarif -out gosec-results.sarif -stdout -verbose=text ./...
+    
+    - name: Upload SARIF file to GitHub Security
+      uses: github/codeql-action/upload-sarif@v3
+      with:
+        sarif_file: gosec-results.sarif
+    
+    - name: Upload gosec results as artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: gosec-results
+        path: gosec-results.sarif
+        retention-days: 30
+
+  # Vulnerability scanning
+  vulnerability-scan:
+    name: Vulnerability Scan
+    runs-on: ubuntu-latest
+    
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Set up Go
+      uses: actions/setup-go@v5
+      with:
+        go-version: '1.21'
+    
+    - name: Download dependencies
+      run: go mod download
+    
+    - name: Install govulncheck
+      run: go install golang.org/x/vuln/cmd/govulncheck@latest
+    
+    - name: Run vulnerability check
+      run: |
+        echo "Running vulnerability scan..."
+        govulncheck -json ./... > vuln-results.json || true
+        
+        # Also run in text mode for human-readable output
+        govulncheck ./... > vuln-results.txt || true
+        
+        echo "Vulnerability scan completed"
+    
+    - name: Check for vulnerabilities
+      run: |
+        if [ -s vuln-results.json ]; then
+          echo "Checking vulnerability results..."
+          
+          # Count vulnerabilities
+          VULN_COUNT=$(jq '[.[] | select(.finding)] | length' vuln-results.json 2>/dev/null || echo "0")
+          
+          echo "Found $VULN_COUNT potential vulnerabilities"
+          
+          if [ "$VULN_COUNT" -gt "0" ]; then
+            echo "⚠️  Vulnerabilities detected!"
+            cat vuln-results.txt
+            exit 1
+          else
+            echo "✅ No vulnerabilities found"
+          fi
+        else
+          echo "✅ No vulnerabilities found"
+        fi
+    
+    - name: Upload vulnerability results
+      if: always()
+      uses: actions/upload-artifact@v4
+      with:
+        name: vulnerability-results
+        path: |
+          vuln-results.json
+          vuln-results.txt
+        retention-days: 30
+
+  # License compliance check
+  license-scan:
+    name: License Compliance
+    runs-on: ubuntu-latest
+    
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Set up Go
+      uses: actions/setup-go@v5
+      with:
+        go-version: '1.21'
+    
+    - name: Install go-licenses
+      run: go install github.com/google/go-licenses@latest
+    
+    - name: Check license compliance
+      run: |
+        echo "Checking license compliance..."
+        
+        # Get all licenses
+        go-licenses csv ./... > licenses.csv
+        
+        echo "Found the following licenses:"
+        cat licenses.csv
+        
+        # Check for forbidden licenses
+        FORBIDDEN_LICENSES="GPL-3.0,AGPL-3.0,LGPL-3.0"
+        
+        for license in $(echo $FORBIDDEN_LICENSES | tr ',' ' '); do
+          if grep -q "$license" licenses.csv; then
+            echo "❌ Found forbidden license: $license"
+            echo "Dependencies with this license:"
+            grep "$license" licenses.csv
+            exit 1
+          fi
+        done
+        
+        echo "✅ All licenses are compliant"
+    
+    - name: Upload license information
+      uses: actions/upload-artifact@v4
+      with:
+        name: license-information
+        path: licenses.csv
+        retention-days: 90
+
+  # Dependency security audit
+  audit:
+    name: Dependency Audit
+    runs-on: ubuntu-latest
+    
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Set up Go
+      uses: actions/setup-go@v5
+      with:
+        go-version: '1.21'
+    
+    - name: Download dependencies
+      run: go mod download
+    
+    - name: Install nancy (Sonatype dependency scanner)
+      run: |
+        curl -L -o nancy https://github.com/sonatypecommunity/nancy/releases/latest/download/nancy-linux-amd64
+        chmod +x nancy
+        sudo mv nancy /usr/local/bin/
+    
+    - name: Generate dependency list
+      run: |
+        go list -json -deps ./... > deps.json
+    
+    - name: Run dependency audit
+      run: |
+        echo "Running dependency security audit..."
+        nancy sleuth -p deps.json > audit-results.txt || true
+        
+        echo "Audit completed. Results:"
+        cat audit-results.txt
+        
+        # Check if vulnerabilities were found
+        if grep -q "Vulnerable" audit-results.txt; then
+          echo "⚠️  Vulnerable dependencies found!"
+          exit 1
+        else
+          echo "✅ No vulnerable dependencies found"
+        fi
+    
+    - name: Upload audit results
+      if: always()
+      uses: actions/upload-artifact@v4
+      with:
+        name: dependency-audit-results
+        path: |
+          deps.json
+          audit-results.txt
+        retention-days: 30
+
+  # Code quality security check
+  code-quality:
+    name: Code Quality Security
+    runs-on: ubuntu-latest
+    
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Set up Go
+      uses: actions/setup-go@v5
+      with:
+        go-version: '1.21'
+    
+    - name: Install staticcheck
+      run: go install honnef.co/go/tools/cmd/staticcheck@latest
+    
+    - name: Run staticcheck
+      run: |
+        echo "Running staticcheck..."
+        staticcheck -checks=all ./... > staticcheck-results.txt || true
+        
+        if [ -s staticcheck-results.txt ]; then
+          echo "Staticcheck found issues:"
+          cat staticcheck-results.txt
+          
+          # Count issues
+          ISSUE_COUNT=$(wc -l < staticcheck-results.txt)
+          echo "Found $ISSUE_COUNT issues"
+          
+          # Fail if there are security-related issues
+          if grep -E "(SA[0-9]+|ST[0-9]+)" staticcheck-results.txt; then
+            echo "❌ Security-related issues found!"
+            exit 1
+          fi
+        else
+          echo "✅ No issues found by staticcheck"
+        fi
+    
+    - name: Upload staticcheck results
+      if: always()
+      uses: actions/upload-artifact@v4
+      with:
+        name: staticcheck-results
+        path: staticcheck-results.txt
+        retention-days: 30
+
+  # Security summary report
+  security-summary:
+    name: Security Summary
+    runs-on: ubuntu-latest
+    needs: [gosec, vulnerability-scan, license-scan, audit, code-quality]
+    if: always()
+    
+    steps:
+    - name: Download all artifacts
+      uses: actions/download-artifact@v4
+    
+    - name: Generate security summary
+      run: |
+        echo "# Security Scan Summary" > security-summary.md
+        echo "" >> security-summary.md
+        echo "Scan Date: $(date -u +"%Y-%m-%d %H:%M:%S UTC")" >> security-summary.md
+        echo "Repository: ${{ github.repository }}" >> security-summary.md
+        echo "Commit: ${{ github.sha }}" >> security-summary.md
+        echo "" >> security-summary.md
+        
+        # Job status summary
+        echo "## Scan Results" >> security-summary.md
+        echo "" >> security-summary.md
+        echo "| Scanner | Status |" >> security-summary.md
+        echo "|---------|--------|" >> security-summary.md
+        echo "| Gosec | ${{ needs.gosec.result }} |" >> security-summary.md
+        echo "| Vulnerability Scan | ${{ needs.vulnerability-scan.result }} |" >> security-summary.md
+        echo "| License Compliance | ${{ needs.license-scan.result }} |" >> security-summary.md
+        echo "| Dependency Audit | ${{ needs.audit.result }} |" >> security-summary.md
+        echo "| Code Quality | ${{ needs.code-quality.result }} |" >> security-summary.md
+        echo "" >> security-summary.md
+        
+        # Overall status
+        if [[ "${{ needs.gosec.result }}" == "success" && "${{ needs.vulnerability-scan.result }}" == "success" && "${{ needs.license-scan.result }}" == "success" && "${{ needs.audit.result }}" == "success" && "${{ needs.code-quality.result }}" == "success" ]]; then
+          echo "## ✅ Overall Status: PASS" >> security-summary.md
+          echo "All security scans completed successfully with no critical issues found." >> security-summary.md
+        else
+          echo "## ❌ Overall Status: ATTENTION REQUIRED" >> security-summary.md
+          echo "One or more security scans require attention. Please review the individual scan results." >> security-summary.md
+        fi
+        
+        echo "" >> security-summary.md
+        echo "For detailed results, check the individual job logs and downloaded artifacts." >> security-summary.md
+    
+    - name: Upload security summary
+      uses: actions/upload-artifact@v4
+      with:
+        name: security-summary
+        path: security-summary.md
+        retention-days: 90

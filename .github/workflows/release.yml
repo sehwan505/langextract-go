@@ -1,0 +1,281 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Version to release (e.g., v1.0.0)'
+        required: true
+        type: string
+      prerelease:
+        description: 'Mark as pre-release'
+        required: false
+        type: boolean
+        default: false
+
+env:
+  REGISTRY: ghcr.io
+  IMAGE_NAME: ${{ github.repository }}
+
+jobs:
+  # Validate release
+  validate:
+    name: Validate Release
+    runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.extract_version.outputs.version }}
+      is_prerelease: ${{ steps.check_prerelease.outputs.is_prerelease }}
+    
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Extract version
+      id: extract_version
+      run: |
+        if [ "${{ github.event_name }}" == "workflow_dispatch" ]; then
+          echo "version=${{ github.event.inputs.version }}" >> $GITHUB_OUTPUT
+        else
+          echo "version=${GITHUB_REF#refs/tags/}" >> $GITHUB_OUTPUT
+        fi
+    
+    - name: Check if pre-release
+      id: check_prerelease
+      run: |
+        VERSION="${{ steps.extract_version.outputs.version }}"
+        if [[ "$VERSION" =~ -(alpha|beta|rc|pre) ]] || [ "${{ github.event.inputs.prerelease }}" == "true" ]; then
+          echo "is_prerelease=true" >> $GITHUB_OUTPUT
+        else
+          echo "is_prerelease=false" >> $GITHUB_OUTPUT
+        fi
+    
+    - name: Validate version format
+      run: |
+        VERSION="${{ steps.extract_version.outputs.version }}"
+        if [[ ! "$VERSION" =~ ^v[0-9]+\.[0-9]+\.[0-9]+(-[a-zA-Z0-9.-]+)?(\+[a-zA-Z0-9.-]+)?$ ]]; then
+          echo "Error: Invalid version format: $VERSION"
+          echo "Version must follow semantic versioning (e.g., v1.0.0, v1.0.0-rc1)"
+          exit 1
+        fi
+        echo "Version $VERSION is valid"
+
+  # Run full test suite
+  test:
+    name: Test Suite
+    runs-on: ubuntu-latest
+    needs: validate
+    
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Set up Go
+      uses: actions/setup-go@v5
+      with:
+        go-version: '1.21'
+    
+    - name: Run comprehensive tests
+      run: |
+        make ci
+        cd test && make test-all
+
+  # Build release artifacts
+  build:
+    name: Build Release Artifacts
+    runs-on: ubuntu-latest
+    needs: [validate, test]
+    
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Set up Go
+      uses: actions/setup-go@v5
+      with:
+        go-version: '1.21'
+    
+    - name: Create optimized release builds
+      run: make release
+    
+    - name: Create distribution archives
+      run: make dist
+    
+    - name: Generate checksums
+      run: |
+        cd dist
+        sha256sum * > SHA256SUMS
+        sha512sum * > SHA512SUMS
+    
+    - name: Upload build artifacts
+      uses: actions/upload-artifact@v4
+      with:
+        name: release-artifacts-${{ needs.validate.outputs.version }}
+        path: |
+          dist/*
+          build/langextract-*
+        retention-days: 30
+
+  # Build and push Docker images
+  docker:
+    name: Build Docker Images
+    runs-on: ubuntu-latest
+    needs: [validate, test]
+    permissions:
+      contents: read
+      packages: write
+    
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Set up Docker Buildx
+      uses: docker/setup-buildx-action@v3
+    
+    - name: Log in to Container Registry
+      uses: docker/login-action@v3
+      with:
+        registry: ${{ env.REGISTRY }}
+        username: ${{ github.actor }}
+        password: ${{ secrets.GITHUB_TOKEN }}
+    
+    - name: Extract metadata
+      id: meta
+      uses: docker/metadata-action@v5
+      with:
+        images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
+        tags: |
+          type=ref,event=tag
+          type=semver,pattern={{version}}
+          type=semver,pattern={{major}}.{{minor}}
+          type=semver,pattern={{major}}
+    
+    - name: Build and push Docker image
+      uses: docker/build-push-action@v5
+      with:
+        context: .
+        platforms: linux/amd64,linux/arm64
+        push: true
+        tags: ${{ steps.meta.outputs.tags }}
+        labels: ${{ steps.meta.outputs.labels }}
+        cache-from: type=gha
+        cache-to: type=gha,mode=max
+
+  # Create GitHub release
+  release:
+    name: Create GitHub Release
+    runs-on: ubuntu-latest
+    needs: [validate, test, build, docker]
+    permissions:
+      contents: write
+    
+    steps:
+    - uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
+    
+    - name: Download build artifacts
+      uses: actions/download-artifact@v4
+      with:
+        name: release-artifacts-${{ needs.validate.outputs.version }}
+        path: release-assets/
+    
+    - name: Generate release notes
+      id: release_notes
+      run: |
+        VERSION="${{ needs.validate.outputs.version }}"
+        
+        # Extract release notes from CHANGELOG.md
+        if [ -f CHANGELOG.md ]; then
+          # Get content between this version and the previous one
+          awk "/^## \[$VERSION\]/{flag=1; next} /^## \[/{flag=0} flag" CHANGELOG.md > release-notes.md
+          
+          # If no specific release notes found, use unreleased section
+          if [ ! -s release-notes.md ]; then
+            awk '/^## \[Unreleased\]/{flag=1; next} /^## \[/{flag=0} flag' CHANGELOG.md > release-notes.md
+          fi
+        else
+          echo "Release $VERSION" > release-notes.md
+        fi
+        
+        # Add Docker image information
+        cat >> release-notes.md << EOF
+        
+        ## Docker Images
+        
+        This release is available as Docker images:
+        
+        \`\`\`bash
+        docker pull ghcr.io/${{ github.repository }}:$VERSION
+        docker pull ghcr.io/${{ github.repository }}:latest
+        \`\`\`
+        
+        ## Installation
+        
+        ### Using Go install
+        \`\`\`bash
+        go install github.com/${{ github.repository }}/cmd/langextract@$VERSION
+        \`\`\`
+        
+        ### Download binaries
+        Download the appropriate binary for your platform from the assets below.
+        EOF
+    
+    - name: Create GitHub Release
+      uses: softprops/action-gh-release@v1
+      with:
+        tag_name: ${{ needs.validate.outputs.version }}
+        name: Release ${{ needs.validate.outputs.version }}
+        body_path: release-notes.md
+        files: release-assets/dist/*
+        draft: false
+        prerelease: ${{ needs.validate.outputs.is_prerelease == 'true' }}
+        generate_release_notes: true
+        append_body: true
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  # Update package managers
+  package:
+    name: Update Package Managers
+    runs-on: ubuntu-latest
+    needs: [validate, release]
+    if: needs.validate.outputs.is_prerelease == 'false'
+    
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Update Homebrew formula
+      uses: mislav/bump-homebrew-formula-action@v3
+      if: contains(needs.validate.outputs.version, '-') == false
+      with:
+        formula-name: langextract-go
+        homebrew-tap: ${{ github.repository_owner }}/homebrew-tap
+        base-branch: main
+        download-url: https://github.com/${{ github.repository }}/archive/${{ needs.validate.outputs.version }}.tar.gz
+        commit-message: |
+          Update langextract-go to ${{ needs.validate.outputs.version }}
+          
+          Created by Release ${{ needs.validate.outputs.version }} workflow
+      env:
+        COMMITTER_TOKEN: ${{ secrets.HOMEBREW_TAP_TOKEN }}
+
+  # Notify on completion
+  notify:
+    name: Notify Release Completion
+    runs-on: ubuntu-latest
+    needs: [validate, test, build, docker, release, package]
+    if: always()
+    
+    steps:
+    - name: Send notification on success
+      if: needs.release.result == 'success'
+      run: |
+        echo "✅ Release ${{ needs.validate.outputs.version }} completed successfully!"
+        echo "- GitHub Release: Created"
+        echo "- Docker Images: Published to ghcr.io"
+        echo "- Package Managers: Updated (if applicable)"
+    
+    - name: Send notification on failure
+      if: failure()
+      run: |
+        echo "❌ Release ${{ needs.validate.outputs.version }} failed!"
+        echo "Please check the workflow logs for details."

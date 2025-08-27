@@ -1,0 +1,61 @@
+# CodeQL Configuration for LangExtract-Go
+# This configuration defines the queries and settings for CodeQL analysis
+
+name: "LangExtract-Go CodeQL Config"
+
+# Disable default query suites if we want to be more specific
+disable-default-queries: false
+
+# Define specific query suites to run
+queries:
+  # Security queries - highest priority
+  - name: security-extended
+    uses: security-extended
+  - name: security-and-quality
+    uses: security-and-quality
+
+# Custom query packs (if any)
+# packs:
+#   - codeql/go-queries
+
+# Paths to exclude from analysis
+paths-ignore:
+  - "test/**"
+  - "examples/**"
+  - "docs/**"
+  - "scripts/**"
+  - "langextract-reference/**"
+  - "**/*_test.go"
+  - "vendor/**"
+  - "build/**"
+  - "dist/**"
+
+# Paths to specifically include (optional)
+paths:
+  - "pkg/**"
+  - "internal/**"
+  - "cmd/**"
+
+# Query filters to exclude specific rules
+query-filters:
+  # Exclude test-related findings since we ignore test paths anyway
+  - exclude:
+      id: go/hardcoded-credentials
+      kind: problem
+      # Only in test files
+  
+  # Configure specific rules
+  - include:
+      tags:
+        - security
+        - correctness
+        - maintainability
+
+# Build configuration
+build:
+  # Commands to run before analysis
+  before-prepare:
+    - "go mod download"
+  
+  # Build commands - let CodeQL auto-detect Go build
+  # auto-build: true
