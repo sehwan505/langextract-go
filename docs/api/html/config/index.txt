@@ -1,0 +1,68 @@
+package config // import "github.com/sehwan505/langextract-go/cmd/langextract/internal/config"
+
+
+FUNCTIONS
+
+func CreateConfigTemplate(path string) error
+    CreateConfigTemplate creates a configuration file template
+
+
+TYPES
+
+type GlobalConfig struct {
+	// Logging configuration
+	LogLevel  string `mapstructure:"log_level" json:"log_level"`
+	LogFormat string `mapstructure:"log_format" json:"log_format"`
+
+	// Default provider settings
+	DefaultProvider string `mapstructure:"default_provider" json:"default_provider"`
+
+	// API configuration
+	OpenAIAPIKey   string `mapstructure:"openai_api_key" json:"-"`
+	GeminiAPIKey   string `mapstructure:"gemini_api_key" json:"-"`
+	OllamaEndpoint string `mapstructure:"ollama_endpoint" json:"ollama_endpoint"`
+
+	// Request configuration
+	RequestTimeout int `mapstructure:"request_timeout" json:"request_timeout"`
+	MaxRetries     int `mapstructure:"max_retries" json:"max_retries"`
+	RetryDelay     int `mapstructure:"retry_delay" json:"retry_delay"`
+
+	// Output configuration
+	DefaultFormat string `mapstructure:"default_format" json:"default_format"`
+	PrettyPrint   bool   `mapstructure:"pretty_print" json:"pretty_print"`
+	ColorOutput   bool   `mapstructure:"color_output" json:"color_output"`
+
+	// Performance settings
+	Concurrency  int  `mapstructure:"concurrency" json:"concurrency"`
+	CacheEnabled bool `mapstructure:"cache_enabled" json:"cache_enabled"`
+	CacheSize    int  `mapstructure:"cache_size" json:"cache_size"`
+
+	// Progress and UI
+	ShowProgress bool `mapstructure:"show_progress" json:"show_progress"`
+	Quiet        bool `mapstructure:"quiet" json:"quiet"`
+	Verbose      bool `mapstructure:"verbose" json:"verbose"`
+
+	// Validation settings
+	StrictValidation bool `mapstructure:"strict_validation" json:"strict_validation"`
+
+	// File paths
+	ConfigDir string `mapstructure:"config_dir" json:"config_dir"`
+	CacheDir  string `mapstructure:"cache_dir" json:"cache_dir"`
+	OutputDir string `mapstructure:"output_dir" json:"output_dir"`
+}
+    GlobalConfig contains application-wide configuration settings
+
+func LoadGlobalConfig() (*GlobalConfig, error)
+    LoadGlobalConfig loads configuration from multiple sources in order of
+    precedence: 1. Command line flags (highest priority) 2. Environment
+    variables 3. Configuration file 4. Default values (lowest priority)
+
+func (c *GlobalConfig) GetAPIKey(provider string) string
+    GetAPIKey returns the API key for the specified provider
+
+func (c *GlobalConfig) HasAPIKey(provider string) bool
+    HasAPIKey checks if an API key is configured for the provider
+
+func (c *GlobalConfig) Validate() error
+    Validate validates the configuration
+

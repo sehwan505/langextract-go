@@ -1,0 +1,395 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>langextract - LangExtract-Go API Documentation</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            line-height: 1.6;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            background: #fafafa;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .header {
+            border-bottom: 2px solid #e9ecef;
+            padding-bottom: 20px;
+            margin-bottom: 30px;
+        }
+        .package-name {
+            color: #2c3e50;
+            font-size: 2em;
+            margin: 0;
+            font-weight: 600;
+        }
+        .package-path {
+            color: #7f8c8d;
+            font-family: 'Monaco', 'Menlo', monospace;
+            margin-top: 5px;
+        }
+        .content {
+            white-space: pre-wrap;
+            font-family: 'Monaco', 'Menlo', monospace;
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 4px;
+            overflow-x: auto;
+        }
+        .nav {
+            margin-bottom: 20px;
+        }
+        .nav a {
+            color: #3498db;
+            text-decoration: none;
+            margin-right: 15px;
+        }
+        .nav a:hover {
+            text-decoration: underline;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="nav">
+            <a href="../index.html">← Back to API Index</a>
+        </div>
+        <div class="header">
+            <h1 class="package-name">langextract</h1>
+            <div class="package-path">github.com/sehwan505/langextract-go/pkg/langextract</div>
+        </div>
+        <div class="content">package langextract // import "github.com/sehwan505/langextract-go/pkg/langextract"
+
+Package langextract provides a high-level API for extracting structured
+information from unstructured text using Large Language Models (LLMs).
+
+This package mirrors the functionality of Google's langextract Python library,
+providing precise source grounding, schema-driven extraction, and support for
+multiple language model providers.
+
+Basic usage:
+
+    import "github.com/sehwan505/langextract-go/pkg/langextract"
+
+    // Extract entities from text
+    opts := langextract.NewExtractOptions().
+    	WithPromptDescription("Extract person names and organizations").
+    	WithModelID("gemini-2.5-flash")
+
+    result, err := langextract.Extract("John Doe works at Google Inc.", opts)
+    if err != nil {
+    	log.Fatal(err)
+    }
+
+    // Visualize results
+    html, err := langextract.Visualize(result, langextract.NewVisualizeOptions())
+    if err != nil {
+    	log.Fatal(err)
+    }
+
+FUNCTIONS
+
+func Extract(input TextOrDocuments, opts *ExtractOptions) (*document.AnnotatedDocument, error)
+    Extract extracts structured information from text using language models.
+    This is the main entry point that mirrors the Python langextract.extract()
+    function.
+
+    The input can be:
+      - A string of text
+      - A URL (must start with http:// or https://)
+      - A Document object
+      - A slice of any of the above
+
+    Returns an AnnotatedDocument with extracted entities and their source
+    grounding.
+
+func ResetGlobalConfig()
+    ResetGlobalConfig resets the global configuration to nil. Useful for testing
+    or forcing re-initialization.
+
+func SetGlobalConfig(config *Config) error
+    SetGlobalConfig sets the global configuration instance.
+
+func Visualize(doc *document.AnnotatedDocument, opts *VisualizeOptions) (string, error)
+    Visualize generates visualization output for extracted data. This mirrors
+    the Python langextract.visualize() function.
+
+    Returns formatted output according to the specified options.
+
+
+TYPES
+
+type AlignmentError struct {
+	ExtractedText string // Text that failed to align
+	SourceText    string // Source text snippet
+	Message       string // Alignment error message
+}
+    AlignmentError represents errors during text alignment operations.
+
+func NewAlignmentError(extractedText, sourceText, message string) *AlignmentError
+    NewAlignmentError creates a new AlignmentError.
+
+func (a *AlignmentError) Error() string
+    Error implements the error interface.
+
+type Config struct {
+	// API Keys for different providers
+	OpenAIAPIKey string
+	GeminiAPIKey string
+	OllamaURL    string
+
+	// Default provider settings
+	DefaultModelID   string
+	DefaultProvider  string
+	DefaultTimeout   time.Duration
+	DefaultRetries   int
+	DefaultDebugMode bool
+
+	// Global behavior settings
+	EnableCaching  bool
+	CacheDirectory string
+	LogLevel       string
+	MaxConcurrency int
+	ConfigFilePath string
+}
+    Config represents global library configuration. This mirrors the
+    configuration approach from Google's langextract Python library.
+
+func DefaultConfig() *Config
+    DefaultConfig returns a Config with sensible defaults.
+
+func GetGlobalConfig() (*Config, error)
+    GetGlobalConfig returns the global configuration instance. If not
+    initialized, it loads from environment and .env file.
+
+func LoadConfig() (*Config, error)
+    LoadConfig loads configuration from environment variables and
+    optional config file. This follows the Google langextract pattern of
+    environment-first configuration.
+
+func (c *Config) GetAPIKey(provider string) string
+    GetAPIKey returns the API key for the specified provider.
+
+func (c *Config) HasProviderCredentials(provider string) bool
+    HasProviderCredentials checks if credentials are available for the specified
+    provider.
+
+func (c *Config) Validate() error
+    Validate checks if the configuration is valid.
+
+type ExtractError struct {
+	Op      string // Operation that caused the error
+	Message string // Human-readable error message
+	Err     error  // Underlying error, if any
+}
+    ExtractError represents errors that occur during extraction operations.
+
+func NewExtractError(op, message string, err error) *ExtractError
+    NewExtractError creates a new ExtractError.
+
+func (e *ExtractError) Error() string
+    Error implements the error interface.
+
+func (e *ExtractError) Unwrap() error
+    Unwrap returns the underlying error.
+
+type ExtractOptions struct {
+	// PromptDescription provides instructions for what to extract
+	PromptDescription string
+
+	// Examples provides few-shot learning examples
+	Examples []*extraction.ExampleData
+
+	// ModelID specifies which language model to use
+	// Default: "gemini-2.5-flash"
+	ModelID string
+
+	// ModelConfig provides model-specific configuration
+	ModelConfig *providers.ModelConfig
+
+	// ExtractionPasses controls how many sequential extraction attempts to make
+	// Default: 1
+	ExtractionPasses int
+
+	// ParallelProcessing enables concurrent processing for large documents
+	// Default: false
+	ParallelProcessing bool
+
+	// MaxTokens limits the maximum tokens for model responses
+	// Default: determined by model
+	MaxTokens int
+
+	// Temperature controls randomness in model responses (0.0 to 1.0)
+	// Default: 0.0 (deterministic)
+	Temperature float64
+
+	// Timeout specifies maximum time for extraction operations
+	// Default: 60 seconds
+	Timeout time.Duration
+
+	// Context for cancellation and deadlines
+	Context context.Context
+
+	// Schema defines the structure for extracted data
+	Schema extraction.ExtractionSchema
+
+	// ValidateOutput enables validation of extracted data against schema
+	// Default: true
+	ValidateOutput bool
+
+	// RetryCount specifies number of retries on failure
+	// Default: 2
+	RetryCount int
+
+	// DebugMode enables detailed logging and debugging
+	// Default: false
+	DebugMode bool
+}
+    ExtractOptions configures extraction behavior. This mirrors the parameters
+    from the Python langextract.extract() function.
+
+func NewExtractOptions() *ExtractOptions
+    NewExtractOptions creates ExtractOptions with sensible defaults.
+
+func (opts *ExtractOptions) Validate() error
+    Validate checks if the options are valid.
+
+func (opts *ExtractOptions) WithContext(ctx context.Context) *ExtractOptions
+    WithContext sets the context for cancellation.
+
+func (opts *ExtractOptions) WithDebugMode(enabled bool) *ExtractOptions
+    WithDebugMode enables or disables debug mode.
+
+func (opts *ExtractOptions) WithExamples(examples []*extraction.ExampleData) *ExtractOptions
+    WithExamples sets the examples for few-shot learning.
+
+func (opts *ExtractOptions) WithExtractionPasses(passes int) *ExtractOptions
+    WithExtractionPasses sets the number of extraction passes.
+
+func (opts *ExtractOptions) WithModelConfig(config *providers.ModelConfig) *ExtractOptions
+    WithModelConfig sets the model configuration.
+
+func (opts *ExtractOptions) WithModelID(modelID string) *ExtractOptions
+    WithModelID sets the model identifier.
+
+func (opts *ExtractOptions) WithParallelProcessing(enabled bool) *ExtractOptions
+    WithParallelProcessing enables or disables parallel processing.
+
+func (opts *ExtractOptions) WithPromptDescription(description string) *ExtractOptions
+    WithPromptDescription sets the prompt description.
+
+func (opts *ExtractOptions) WithRetryCount(count int) *ExtractOptions
+    WithRetryCount sets the number of retries.
+
+func (opts *ExtractOptions) WithSchema(schema extraction.ExtractionSchema) *ExtractOptions
+    WithSchema sets the extraction schema.
+
+func (opts *ExtractOptions) WithTemperature(temperature float64) *ExtractOptions
+    WithTemperature sets the model temperature.
+
+func (opts *ExtractOptions) WithTimeout(timeout time.Duration) *ExtractOptions
+    WithTimeout sets the operation timeout.
+
+func (opts *ExtractOptions) WithValidation(enabled bool) *ExtractOptions
+    WithValidation enables or disables output validation.
+
+type ProviderError struct {
+	Provider string // Provider name (openai, gemini, ollama)
+	Status   string // HTTP status or error code
+	Message  string // Provider error message
+	Err      error  // Underlying error
+}
+    ProviderError represents errors from language model providers.
+
+func NewProviderError(provider, status, message string, err error) *ProviderError
+    NewProviderError creates a new ProviderError.
+
+func (p *ProviderError) Error() string
+    Error implements the error interface.
+
+func (p *ProviderError) Unwrap() error
+    Unwrap returns the underlying error.
+
+type TextOrDocuments interface{}
+    TextOrDocuments represents flexible input types for extraction.
+
+type ValidationError struct {
+	Field   string // Field that failed validation
+	Value   string // Invalid value
+	Message string // Validation error message
+}
+    ValidationError represents validation errors in extraction configuration.
+
+func NewValidationError(field, value, message string) *ValidationError
+    NewValidationError creates a new ValidationError.
+
+func (v *ValidationError) Error() string
+    Error implements the error interface.
+
+type VisualizeOptions struct {
+	// Format specifies the output format (html, json, csv)
+	// Default: "html"
+	Format string
+
+	// ShowConfidence includes confidence scores in visualization
+	// Default: true
+	ShowConfidence bool
+
+	// ShowAlignment includes alignment status in visualization
+	// Default: true
+	ShowAlignment bool
+
+	// IncludeContext shows surrounding text context
+	// Default: true
+	IncludeContext bool
+
+	// ContextWindow specifies characters of context to show around extractions
+	// Default: 50
+	ContextWindow int
+
+	// GroupByClass groups extractions by their class in output
+	// Default: false
+	GroupByClass bool
+
+	// SortByPosition sorts extractions by their position in text
+	// Default: true
+	SortByPosition bool
+}
+    VisualizeOptions configures visualization behavior.
+
+func NewVisualizeOptions() *VisualizeOptions
+    NewVisualizeOptions creates VisualizeOptions with sensible defaults.
+
+func (opts *VisualizeOptions) Validate() error
+    Validate checks if the options are valid.
+
+func (opts *VisualizeOptions) WithAlignment(show bool) *VisualizeOptions
+    WithAlignment enables or disables alignment status display.
+
+func (opts *VisualizeOptions) WithConfidence(show bool) *VisualizeOptions
+    WithConfidence enables or disables confidence display.
+
+func (opts *VisualizeOptions) WithContext(include bool) *VisualizeOptions
+    WithContext enables or disables context display.
+
+func (opts *VisualizeOptions) WithContextWindow(window int) *VisualizeOptions
+    WithContextWindow sets the context window size.
+
+func (opts *VisualizeOptions) WithFormat(format string) *VisualizeOptions
+    WithFormat sets the output format.
+
+func (opts *VisualizeOptions) WithGroupByClass(group bool) *VisualizeOptions
+    WithGroupByClass enables or disables grouping by class.
+
+func (opts *VisualizeOptions) WithSortByPosition(sort bool) *VisualizeOptions
+    WithSortByPosition enables or disables sorting by position.</div>
+    </div>
+</body>
+</html>

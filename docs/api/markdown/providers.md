@@ -1,0 +1,355 @@
+# providers
+
+Package: `github.com/sehwan505/langextract-go/pkg/providers`
+
+```go
+package providers // import "github.com/sehwan505/langextract-go/pkg/providers"
+
+
+FUNCTIONS
+
+func GetAvailableProviders() []string
+    GetAvailableProviders returns available providers from the default registry.
+
+func Register(name string, factory ProviderFactory)
+    Register registers a provider with the default registry.
+
+func RegisterAlias(modelID, providerName string)
+    RegisterAlias registers a model alias with the default registry.
+
+func RegisterDefaultProviders(registry *ProviderRegistry)
+    RegisterDefaultProviders registers all default providers with the given
+    registry.
+
+
+TYPES
+
+type BaseLanguageModel interface {
+	// Infer generates model output for the given prompts
+	Infer(ctx context.Context, prompts []string, options map[string]any) ([][]ScoredOutput, error)
+
+	// ParseOutput processes raw model output into structured format
+	ParseOutput(output string) (any, error)
+
+	// ApplySchema applies schema constraints to the model
+	ApplySchema(schema any)
+
+	// SetFenceOutput configures whether output should be fenced (e.g., ```json)
+	SetFenceOutput(enabled bool)
+
+	// GetModelID returns the model identifier
+	GetModelID() string
+
+	// IsAvailable checks if the provider is ready for use
+	IsAvailable() bool
+}
+    BaseLanguageModel defines the core interface that all language model
+    providers must implement. This mirrors the BaseLanguageModel abstract class
+    from the Python implementation.
+
+func CreateGPT35Turbo(apiKey string) (BaseLanguageModel, error)
+    CreateGPT35Turbo creates a GPT-3.5-turbo provider instance.
+
+func CreateGPT4(apiKey string) (BaseLanguageModel, error)
+    CreateGPT4 creates a GPT-4 provider instance.
+
+func CreateGemini(modelID string, opts *ProviderOptions) (BaseLanguageModel, error)
+    CreateGemini creates a Gemini provider with the given model ID and options.
+
+func CreateGeminiFlash(apiKey string) (BaseLanguageModel, error)
+    CreateGeminiFlash creates a Gemini Flash provider instance.
+
+func CreateGeminiPro(apiKey string) (BaseLanguageModel, error)
+    CreateGeminiPro creates a Gemini Pro provider instance.
+
+func CreateModel(config *ModelConfig) (BaseLanguageModel, error)
+    CreateModel creates a model using the default registry.
+
+func CreateModelFromEnv(modelID string) (BaseLanguageModel, error)
+    CreateModelFromEnv creates a model using environment variables for
+    configuration.
+
+func CreateOllama(modelID string, opts *ProviderOptions) (BaseLanguageModel, error)
+    CreateOllama creates an Ollama provider with the given model ID and options.
+
+func CreateOllamaLlama(baseURL string) (BaseLanguageModel, error)
+    CreateOllamaLlama creates an Ollama provider with Llama model.
+
+func CreateOpenAI(modelID string, opts *ProviderOptions) (BaseLanguageModel, error)
+    CreateOpenAI creates an OpenAI provider with the given model ID and options.
+
+func MustCreateModel(config *ModelConfig) BaseLanguageModel
+    MustCreateModel creates a model and panics on error. Useful for
+    initialization when the model must be available.
+
+func NewGeminiProvider(config *ModelConfig) (BaseLanguageModel, error)
+    NewGeminiProvider creates a new Gemini provider instance.
+
+func NewOllamaProvider(config *ModelConfig) (BaseLanguageModel, error)
+    NewOllamaProvider creates a new Ollama provider instance.
+
+func NewOpenAIProvider(config *ModelConfig) (BaseLanguageModel, error)
+    NewOpenAIProvider creates a new OpenAI provider instance.
+
+type Choice struct {
+	Index   int     `json:"index"`
+	Message Message `json:"message"`
+}
+    Choice represents a response choice.
+
+type GeminiCandidate struct {
+	Content GeminiContent `json:"content"`
+	Index   int           `json:"index"`
+}
+    GeminiCandidate represents a response candidate.
+
+type GeminiContent struct {
+	Parts []GeminiPart `json:"parts"`
+}
+    GeminiContent represents the content part of a Gemini request.
+
+type GeminiGenerationConfig struct {
+	Temperature      *float64 `json:"temperature,omitempty"`
+	TopP             *float64 `json:"topP,omitempty"`
+	MaxOutputTokens  *int     `json:"maxOutputTokens,omitempty"`
+	ResponseMimeType string   `json:"responseMimeType,omitempty"`
+}
+    GeminiGenerationConfig represents generation configuration.
+
+type GeminiPart struct {
+	Text string `json:"text"`
+}
+    GeminiPart represents a part of the content (text, image, etc.).
+
+type GeminiProvider struct {
+	// Has unexported fields.
+}
+    GeminiProvider implements the BaseLanguageModel interface for Google Gemini
+    models.
+
+func (p *GeminiProvider) ApplySchema(schema any)
+    ApplySchema applies schema constraints to the model.
+
+func (p *GeminiProvider) GetModelID() string
+    GetModelID returns the model identifier.
+
+func (p *GeminiProvider) Infer(ctx context.Context, prompts []string, options map[string]any) ([][]ScoredOutput, error)
+    Infer generates model output for the given prompts.
+
+func (p *GeminiProvider) IsAvailable() bool
+    IsAvailable checks if the provider is ready for use.
+
+func (p *GeminiProvider) ParseOutput(output string) (any, error)
+    ParseOutput processes raw model output into structured format.
+
+func (p *GeminiProvider) SetFenceOutput(enabled bool)
+    SetFenceOutput configures whether output should be fenced.
+
+type GeminiRequest struct {
+	Contents         []GeminiContent         `json:"contents"`
+	GenerationConfig *GeminiGenerationConfig `json:"generationConfig,omitempty"`
+}
+    GeminiRequest represents a Gemini API request.
+
+type GeminiResponse struct {
+	Candidates    []GeminiCandidate `json:"candidates"`
+	UsageMetadata GeminiUsage       `json:"usageMetadata"`
+}
+    GeminiResponse represents a Gemini API response.
+
+type GeminiUsage struct {
+	PromptTokenCount     int `json:"promptTokenCount"`
+	CandidatesTokenCount int `json:"candidatesTokenCount"`
+	TotalTokenCount      int `json:"totalTokenCount"`
+}
+    GeminiUsage represents token usage information.
+
+type Message struct {
+	Role    string `json:"role"`
+	Content string `json:"content"`
+}
+    Message represents a chat message.
+
+type ModelConfig struct {
+	ModelID          string         `json:"model_id"`
+	Provider         string         `json:"provider,omitempty"`
+	ProviderKwargs   map[string]any `json:"provider_kwargs,omitempty"`
+	Temperature      float64        `json:"temperature,omitempty"`
+	MaxTokens        int            `json:"max_tokens,omitempty"`
+	TopP             float64        `json:"top_p,omitempty"`
+	FrequencyPenalty float64        `json:"frequency_penalty,omitempty"`
+	PresencePenalty  float64        `json:"presence_penalty,omitempty"`
+}
+    ModelConfig holds language model configuration. This mirrors the ModelConfig
+    from the Python implementation.
+
+func NewModelConfig(modelID string) *ModelConfig
+    NewModelConfig creates a new ModelConfig with defaults.
+
+func (c *ModelConfig) WithMaxTokens(maxTokens int) *ModelConfig
+    WithMaxTokens sets the maximum tokens parameter.
+
+func (c *ModelConfig) WithProvider(provider string) *ModelConfig
+    WithProvider sets the provider for the model config.
+
+func (c *ModelConfig) WithProviderKwargs(kwargs map[string]any) *ModelConfig
+    WithProviderKwargs sets provider-specific arguments.
+
+func (c *ModelConfig) WithTemperature(temp float64) *ModelConfig
+    WithTemperature sets the temperature parameter.
+
+type OllamaModel struct {
+	Name       string    `json:"name"`
+	Size       int64     `json:"size"`
+	Digest     string    `json:"digest"`
+	ModifiedAt time.Time `json:"modified_at"`
+}
+    OllamaModel represents a model in the tags response.
+
+type OllamaProvider struct {
+	// Has unexported fields.
+}
+    OllamaProvider implements the BaseLanguageModel interface for Ollama local
+    models.
+
+func (p *OllamaProvider) ApplySchema(schema any)
+    ApplySchema applies schema constraints to the model.
+
+func (p *OllamaProvider) GetAvailableModels(ctx context.Context) ([]string, error)
+    GetAvailableModels returns a list of locally available models.
+
+func (p *OllamaProvider) GetModelID() string
+    GetModelID returns the model identifier.
+
+func (p *OllamaProvider) Infer(ctx context.Context, prompts []string, options map[string]any) ([][]ScoredOutput, error)
+    Infer generates model output for the given prompts.
+
+func (p *OllamaProvider) IsAvailable() bool
+    IsAvailable checks if the provider is ready for use.
+
+func (p *OllamaProvider) ParseOutput(output string) (any, error)
+    ParseOutput processes raw model output into structured format.
+
+func (p *OllamaProvider) SetFenceOutput(enabled bool)
+    SetFenceOutput configures whether output should be fenced.
+
+type OllamaRequest struct {
+	Model    string                 `json:"model"`
+	Prompt   string                 `json:"prompt"`
+	Stream   bool                   `json:"stream"`
+	Options  map[string]interface{} `json:"options,omitempty"`
+	Template string                 `json:"template,omitempty"`
+}
+    OllamaRequest represents an Ollama API request.
+
+type OllamaResponse struct {
+	Model              string `json:"model"`
+	CreatedAt          string `json:"created_at"`
+	Response           string `json:"response"`
+	Done               bool   `json:"done"`
+	DoneReason         string `json:"done_reason,omitempty"`
+	Context            []int  `json:"context,omitempty"`
+	TotalDuration      int64  `json:"total_duration,omitempty"`
+	LoadDuration       int64  `json:"load_duration,omitempty"`
+	PromptEvalCount    int    `json:"prompt_eval_count,omitempty"`
+	PromptEvalDuration int64  `json:"prompt_eval_duration,omitempty"`
+	EvalCount          int    `json:"eval_count,omitempty"`
+	EvalDuration       int64  `json:"eval_duration,omitempty"`
+}
+    OllamaResponse represents an Ollama API response.
+
+type OllamaTagsResponse struct {
+	Models []OllamaModel `json:"models"`
+}
+    OllamaTagsResponse represents the response from /api/tags endpoint.
+
+type OpenAIProvider struct {
+	// Has unexported fields.
+}
+    OpenAIProvider implements the BaseLanguageModel interface for OpenAI models.
+
+func (p *OpenAIProvider) ApplySchema(schema any)
+    ApplySchema applies schema constraints to the model.
+
+func (p *OpenAIProvider) GetModelID() string
+    GetModelID returns the model identifier.
+
+func (p *OpenAIProvider) Infer(ctx context.Context, prompts []string, options map[string]any) ([][]ScoredOutput, error)
+    Infer generates model output for the given prompts.
+
+func (p *OpenAIProvider) IsAvailable() bool
+    IsAvailable checks if the provider is ready for use.
+
+func (p *OpenAIProvider) ParseOutput(output string) (any, error)
+    ParseOutput processes raw model output into structured format.
+
+func (p *OpenAIProvider) SetFenceOutput(enabled bool)
+    SetFenceOutput configures whether output should be fenced.
+
+type OpenAIRequest struct {
+	Model       string    `json:"model"`
+	Messages    []Message `json:"messages"`
+	Temperature float64   `json:"temperature,omitempty"`
+	MaxTokens   int       `json:"max_tokens,omitempty"`
+	TopP        float64   `json:"top_p,omitempty"`
+}
+    OpenAIRequest represents an OpenAI API request.
+
+type OpenAIResponse struct {
+	ID      string   `json:"id"`
+	Object  string   `json:"object"`
+	Choices []Choice `json:"choices"`
+	Usage   Usage    `json:"usage"`
+}
+    OpenAIResponse represents an OpenAI API response.
+
+type ProviderFactory func(config *ModelConfig) (BaseLanguageModel, error)
+    ProviderFactory creates a new language model provider instance.
+
+type ProviderOptions struct {
+	APIKey     string
+	BaseURL    string
+	Timeout    int
+	MaxRetries int
+}
+    ProviderOptions holds options for creating providers.
+
+type ProviderRegistry struct {
+	// Has unexported fields.
+}
+    ProviderRegistry manages available language model providers. This mirrors
+    the provider discovery mechanism from the Python implementation.
+
+func NewProviderRegistry() *ProviderRegistry
+    NewProviderRegistry creates a new provider registry.
+
+func (r *ProviderRegistry) CreateModel(config *ModelConfig) (BaseLanguageModel, error)
+    CreateModel creates a language model instance based on the configuration.
+    This mirrors the create_model function from the Python implementation.
+
+func (r *ProviderRegistry) GetAvailableProviders() []string
+    GetAvailableProviders returns a list of registered provider names.
+
+func (r *ProviderRegistry) HasProvider(name string) bool
+    HasProvider checks if a provider is registered.
+
+func (r *ProviderRegistry) Register(name string, factory ProviderFactory)
+    Register registers a provider factory with the given name.
+
+func (r *ProviderRegistry) RegisterAlias(modelID, providerName string)
+    RegisterAlias registers a model ID alias that maps to a specific provider.
+
+type ScoredOutput struct {
+	Output string  `json:"output"`
+	Score  float64 `json:"score,omitempty"`
+}
+    ScoredOutput represents a single output with an optional score.
+
+type Usage struct {
+	PromptTokens     int `json:"prompt_tokens"`
+	CompletionTokens int `json:"completion_tokens"`
+	TotalTokens      int `json:"total_tokens"`
+}
+    Usage represents token usage information.
+
+```

@@ -1,0 +1,527 @@
+package engine // import "github.com/sehwan505/langextract-go/internal/engine"
+
+
+TYPES
+
+type AlignmentMetrics struct {
+	ExtractedText   string
+	AlignmentStatus types.AlignmentStatus
+	Confidence      float64
+	ProcessingTime  time.Duration
+	Method          string
+}
+    AlignmentMetrics tracks alignment performance.
+
+type CacheEntry struct {
+	Response  *CacheableResponse `json:"response"`
+	Timestamp time.Time          `json:"timestamp"`
+	HitCount  int                `json:"hit_count"`
+}
+    CacheEntry represents a cached response.
+
+type CacheableResponse struct {
+	Output     string        `json:"output"`
+	TokensUsed int           `json:"tokens_used"`
+	Latency    time.Duration `json:"latency"`
+	ProviderID string        `json:"provider_id"`
+	ModelID    string        `json:"model_id"`
+}
+    CacheableResponse represents a cacheable provider response.
+
+type ChunkMetrics struct {
+	ChunkID          string
+	ChunkSize        int
+	ExtractionsFound int
+	ProcessingTime   time.Duration
+	AlignmentSuccess bool
+	QualityScore     float64
+}
+    ChunkMetrics tracks metrics for chunk processing.
+
+type ChunkOverlapStrategy string
+    ChunkOverlapStrategy defines how overlapping chunks are handled.
+
+const (
+	NoOverlap       ChunkOverlapStrategy = "none"
+	FixedOverlap    ChunkOverlapStrategy = "fixed"
+	AdaptiveOverlap ChunkOverlapStrategy = "adaptive"
+	SemanticOverlap ChunkOverlapStrategy = "semantic"
+)
+type ChunkResult struct {
+	ChunkID        string
+	Extractions    []*extraction.Extraction
+	ProcessingTime time.Duration
+	TokensUsed     int
+	Success        bool
+	CacheHit       bool
+	Error          error
+}
+    ChunkResult represents the result of processing a single chunk.
+
+type ExtractionDebugInfo struct {
+	// Prompt information
+	GeneratedPrompt string `json:"generated_prompt,omitempty"`
+	PromptTokens    int    `json:"prompt_tokens,omitempty"`
+
+	// Provider responses
+	RawResponses   []string `json:"raw_responses,omitempty"`
+	ResponseTokens int      `json:"response_tokens,omitempty"`
+
+	// Processing details
+	ProcessingSteps []ProcessingStep `json:"processing_steps,omitempty"`
+	RetryAttempts   int              `json:"retry_attempts"`
+	FailoverEvents  []FailoverEvent  `json:"failover_events,omitempty"`
+
+	// Performance metrics
+	ProviderLatency time.Duration `json:"provider_latency"`
+	ProcessingTime  time.Duration `json:"processing_time"`
+
+	// Schema validation details
+	SchemaValidation *SchemaValidationResult `json:"schema_validation,omitempty"`
+}
+    ExtractionDebugInfo contains detailed debug information about the extraction
+    process.
+
+type ExtractionEngine struct {
+	// Has unexported fields.
+}
+    ExtractionEngine is the main processing pipeline for document extraction.
+    It coordinates document preprocessing, provider management, multi-pass
+    extraction, and result aggregation.
+
+func NewExtractionEngine(config *ExtractionEngineConfig) *ExtractionEngine
+    NewExtractionEngine creates a new extraction engine with the given
+    configuration.
+
+func (e *ExtractionEngine) GetActiveRequests() map[string]*ExtractionRequest
+    GetActiveRequests returns information about currently active requests.
+
+func (e *ExtractionEngine) GetCacheStats() map[string]interface{}
+    GetCacheStats returns cache statistics.
+
+func (e *ExtractionEngine) GetProviderHealth() map[string]*ProviderHealth
+    GetProviderHealth returns the health status of all providers.
+
+func (e *ExtractionEngine) ProcessExtraction(request *ExtractionRequest) (*ExtractionResponse, error)
+    ProcessExtraction processes a single extraction request through the complete
+    pipeline.
+
+type ExtractionEngineConfig struct {
+	// Processing settings
+	MaxConcurrentRequests int
+	DefaultTimeout        time.Duration
+	EnableDebugMode       bool
+
+	// Multi-pass extraction
+	EnableMultiPass          bool
+	MaxPasses                int
+	PassImprovementThreshold float64
+
+	// Result aggregation
+	EnableDeduplication bool
+	ConfidenceThreshold float64
+	OverlapResolution   OverlapResolutionStrategy
+
+	// Progress tracking
+	EnableProgressTracking bool
+	ProgressUpdateInterval time.Duration
+
+	// Provider management
+	ProviderConfig *ProviderManagerConfig
+}
+    ExtractionEngineConfig configures the extraction engine behavior.
+
+func DefaultExtractionEngineConfig() *ExtractionEngineConfig
+    DefaultExtractionEngineConfig returns a default configuration.
+
+type ExtractionProgress struct {
+	RequestID       string        `json:"request_id"`
+	Stage           string        `json:"stage"`
+	Progress        float64       `json:"progress"` // 0.0 to 1.0
+	Message         string        `json:"message"`
+	ElapsedTime     time.Duration `json:"elapsed_time"`
+	EstimatedTotal  time.Duration `json:"estimated_total,omitempty"`
+	CurrentPass     int           `json:"current_pass"`
+	TotalPasses     int           `json:"total_passes"`
+	CurrentChunk    int           `json:"current_chunk"`
+	ChunksProcessed int           `json:"chunks_processed"`
+	TotalChunks     int           `json:"total_chunks"`
+}
+    ExtractionProgress represents progress information for long-running
+    extractions.
+
+type ExtractionRequest struct {
+	// Request identification
+	ID        string    `json:"id"`
+	Timestamp time.Time `json:"timestamp"`
+
+	// Input data
+	Document *document.Document `json:"document"`
+	Text     string             `json:"text"`
+
+	// Extraction configuration
+	TaskDescription string                      `json:"task_description"`
+	Examples        []*extraction.ExampleData   `json:"examples"`
+	Schema          extraction.ExtractionSchema `json:"schema,omitempty"`
+
+	// Provider configuration
+	ProviderID  string                      `json:"provider_id"`
+	ModelID     string                      `json:"model_id"`
+	ModelConfig *providers.ModelConfig      `json:"model_config,omitempty"`
+	Provider    providers.BaseLanguageModel `json:"-"` // Not serialized
+
+	// Processing options
+	MaxTokens        int           `json:"max_tokens,omitempty"`
+	Temperature      float64       `json:"temperature"`
+	Timeout          time.Duration `json:"timeout"`
+	RetryCount       int           `json:"retry_count"`
+	ValidateOutput   bool          `json:"validate_output"`
+	ExtractionPasses int           `json:"extraction_passes"`
+
+	// Context and cancellation
+	Context context.Context `json:"-"` // Not serialized
+
+	// Progress tracking
+	ProgressCallback func(progress ExtractionProgress) `json:"-"` // Not serialized
+}
+    ExtractionRequest represents an internal extraction request. This
+    encapsulates all information needed for a single extraction operation.
+
+func NewExtractionRequest(doc *document.Document, taskDescription string) *ExtractionRequest
+    NewExtractionRequest creates a new extraction request with default values.
+
+type ExtractionResponse struct {
+	// Request identification
+	RequestID string    `json:"request_id"`
+	Timestamp time.Time `json:"timestamp"`
+
+	// Results
+	AnnotatedDocument *document.AnnotatedDocument `json:"annotated_document,omitempty"`
+	Extractions       []*extraction.Extraction    `json:"extractions"`
+
+	// Execution metadata
+	ExecutionTime   time.Duration `json:"execution_time"`
+	TokensUsed      int           `json:"tokens_used,omitempty"`
+	ProviderUsed    string        `json:"provider_used"`
+	ModelUsed       string        `json:"model_used"`
+	PassesCompleted int           `json:"passes_completed"`
+
+	// Quality metrics
+	ExtractionCount int     `json:"extraction_count"`
+	TextCoverage    float64 `json:"text_coverage"`
+	ConfidenceScore float64 `json:"confidence_score,omitempty"`
+
+	// Error information
+	Error            error             `json:"-"` // Not serialized
+	ErrorMessage     string            `json:"error_message,omitempty"`
+	ErrorCode        string            `json:"error_code,omitempty"`
+	ValidationErrors []ValidationError `json:"validation_errors,omitempty"`
+
+	// Debug information
+	DebugInfo *ExtractionDebugInfo `json:"debug_info,omitempty"`
+}
+    ExtractionResponse represents the result of an extraction operation.
+
+func NewExtractionResponse(requestID string) *ExtractionResponse
+    NewExtractionResponse creates a new extraction response.
+
+func (r *ExtractionResponse) AddFailoverEvent(originalProvider, failureReason, fallbackProvider string, success bool)
+    AddFailoverEvent adds a failover event to the debug information.
+
+func (r *ExtractionResponse) AddProcessingStep(name, status, message string, duration time.Duration, metadata map[string]any)
+    AddProcessingStep adds a processing step to the debug information.
+
+func (r *ExtractionResponse) AddValidationError(field, value, constraint, message string)
+    AddValidationError adds a validation error to the response.
+
+func (r *ExtractionResponse) IsSuccessful() bool
+    IsSuccessful returns true if the extraction was successful.
+
+func (r *ExtractionResponse) SetError(err error, code string)
+    SetError sets the error information for the response.
+
+type ExtractionStage string
+    ExtractionStage represents the current stage of extraction processing.
+
+const (
+	StageInitialization  ExtractionStage = "initialization"
+	StagePreprocessing   ExtractionStage = "preprocessing"
+	StagePromptBuilding  ExtractionStage = "prompt_building"
+	StageProviderCall    ExtractionStage = "provider_call"
+	StageChunkProcessing ExtractionStage = "chunk_processing"
+	StageResponseParsing ExtractionStage = "response_parsing"
+	StageValidation      ExtractionStage = "validation"
+	StageAlignment       ExtractionStage = "alignment"
+	StageAggregation     ExtractionStage = "aggregation"
+	StageFinalization    ExtractionStage = "finalization"
+	StageComplete        ExtractionStage = "complete"
+	StageError           ExtractionStage = "error"
+)
+type ExtractionStatus string
+    ExtractionStatus represents the status of an extraction operation.
+
+const (
+	StatusPending    ExtractionStatus = "pending"
+	StatusProcessing ExtractionStatus = "processing"
+	StatusComplete   ExtractionStatus = "complete"
+	StatusFailed     ExtractionStatus = "failed"
+	StatusCancelled  ExtractionStatus = "cancelled"
+)
+type FailoverEvent struct {
+	Timestamp        time.Time `json:"timestamp"`
+	OriginalProvider string    `json:"original_provider"`
+	FailureReason    string    `json:"failure_reason"`
+	FallbackProvider string    `json:"fallback_provider"`
+	Success          bool      `json:"success"`
+}
+    FailoverEvent represents a provider failover event.
+
+type LoadBalanceStrategy string
+    LoadBalanceStrategy defines the load balancing strategy.
+
+const (
+	RoundRobin     LoadBalanceStrategy = "round_robin"
+	LeastLatency   LoadBalanceStrategy = "least_latency"
+	HealthyOnly    LoadBalanceStrategy = "healthy_only"
+	WeightedRandom LoadBalanceStrategy = "weighted_random"
+)
+type MergingStrategy string
+    MergingStrategy defines how results from multiple passes are merged.
+
+const (
+	UnionMerge        MergingStrategy = "union"
+	HighestConfidence MergingStrategy = "highest_confidence"
+	VotingMerge       MergingStrategy = "voting"
+	OverlapResolution MergingStrategy = "overlap_resolution"
+)
+type MultiPassConfig struct {
+	// Pass configuration
+	MaxPasses            int
+	MinPasses            int
+	ImprovementThreshold float64
+	ConfidenceThreshold  float64
+
+	// Chunking configuration
+	EnableChunking  bool
+	ChunkingOptions chunking.ChunkingOptions
+	OverlapStrategy ChunkOverlapStrategy
+
+	// Alignment configuration
+	EnableAlignment   bool
+	AlignmentOptions  alignment.AlignmentOptions
+	AlignmentStrategy alignment.AlignmentStrategy
+
+	// Quality control
+	QualityThreshold       float64
+	MaxRetriesPerChunk     int
+	EnableQualityFiltering bool
+
+	// Performance settings
+	ConcurrentChunks       int
+	EnableCaching          bool
+	CacheExpirationMinutes int
+
+	// Strategy selection
+	PassStrategy    PassStrategy
+	MergingStrategy MergingStrategy
+}
+    MultiPassConfig configures the multi-pass extraction strategy.
+
+func DefaultMultiPassConfig() *MultiPassConfig
+    DefaultMultiPassConfig returns a default configuration for multi-pass
+    extraction.
+
+type MultiPassCoordinator struct {
+	// Has unexported fields.
+}
+    MultiPassCoordinator orchestrates multiple extraction passes with
+    intelligent chunking, alignment, and result merging for improved accuracy
+    and recall.
+
+func NewMultiPassCoordinator(config *MultiPassConfig) *MultiPassCoordinator
+    NewMultiPassCoordinator creates a new multi-pass coordinator with the given
+    configuration.
+
+func (mpc *MultiPassCoordinator) ExecuteMultiPass(ctx context.Context, request *ExtractionRequest, providerManager *ProviderManager) (*MultiPassResult, error)
+    ExecuteMultiPass orchestrates multiple extraction passes for improved
+    results.
+
+type MultiPassMetrics struct {
+	TotalPasses      int
+	TotalChunks      int
+	TotalExtractions int
+	TotalAlignments  int
+
+	PassMetrics      []PassMetrics
+	ChunkMetrics     []ChunkMetrics
+	AlignmentMetrics []AlignmentMetrics
+
+	ProcessingTime      time.Duration
+	OverallConfidence   float64
+	CoverageImprovement float64
+	QualityScore        float64
+}
+    MultiPassMetrics tracks performance and quality metrics across passes.
+
+type MultiPassResult struct {
+	RequestID        string
+	StartTime        time.Time
+	ProcessingTime   time.Duration
+	Passes           []PassResult
+	AllExtractions   []*extraction.Extraction
+	FinalExtractions []*extraction.Extraction
+	TotalExtractions int
+	Success          bool
+	AlignmentErrors  []string
+	Metrics          MultiPassMetrics
+}
+    MultiPassResult represents the result of multi-pass extraction.
+
+type OverlapResolutionStrategy string
+    OverlapResolutionStrategy defines how overlapping extractions are handled.
+
+const (
+	KeepHighestConfidence OverlapResolutionStrategy = "highest_confidence"
+	KeepLongest           OverlapResolutionStrategy = "longest"
+	KeepFirst             OverlapResolutionStrategy = "first"
+	MergeOverlapping      OverlapResolutionStrategy = "merge"
+)
+type PassMetrics struct {
+	PassNumber        int
+	ChunksProcessed   int
+	ExtractionsFound  int
+	AverageConfidence float64
+	ProcessingTime    time.Duration
+	ImprovementScore  float64
+	ErrorCount        int
+}
+    PassMetrics tracks metrics for a single extraction pass.
+
+type PassResult struct {
+	PassNumber      int
+	ChunksProcessed int
+	Extractions     []*extraction.Extraction
+	ChunkResults    []ChunkResult
+	ProcessingTime  time.Duration
+	Success         bool
+	Error           error
+}
+    PassResult represents the result of a single extraction pass.
+
+type PassStrategy string
+    PassStrategy defines the strategy for determining extraction passes.
+
+const (
+	FixedPasses    PassStrategy = "fixed"
+	AdaptivePasses PassStrategy = "adaptive"
+	QualityDriven  PassStrategy = "quality_driven"
+	CoverageDriven PassStrategy = "coverage_driven"
+)
+type ProcessingStep struct {
+	Name      string         `json:"name"`
+	StartTime time.Time      `json:"start_time"`
+	Duration  time.Duration  `json:"duration"`
+	Status    string         `json:"status"` // "success", "error", "skipped"
+	Message   string         `json:"message,omitempty"`
+	Metadata  map[string]any `json:"metadata,omitempty"`
+}
+    ProcessingStep represents a single step in the extraction pipeline.
+
+type ProviderHealth struct {
+	ProviderName         string        `json:"provider_name"`
+	IsHealthy            bool          `json:"is_healthy"`
+	LastHealthCheck      time.Time     `json:"last_health_check"`
+	ConsecutiveFailures  int           `json:"consecutive_failures"`
+	ConsecutiveSuccesses int           `json:"consecutive_successes"`
+	AverageLatency       time.Duration `json:"average_latency"`
+	TotalRequests        int64         `json:"total_requests"`
+	SuccessfulRequests   int64         `json:"successful_requests"`
+	FailedRequests       int64         `json:"failed_requests"`
+	LastError            string        `json:"last_error,omitempty"`
+}
+    ProviderHealth tracks the health status of a provider.
+
+type ProviderManager struct {
+	// Has unexported fields.
+}
+    ProviderManager manages multiple language model providers with health
+    monitoring, load balancing, and failover capabilities.
+
+func NewProviderManager(config *ProviderManagerConfig) *ProviderManager
+    NewProviderManager creates a new provider manager with the given
+    configuration.
+
+func (pm *ProviderManager) ExecuteWithFailover(ctx context.Context, request *ExtractionRequest) (*CacheableResponse, error)
+    ExecuteWithFailover executes a request with automatic failover on failure.
+
+func (pm *ProviderManager) GetCacheStats() map[string]interface{}
+    GetCacheStats returns cache statistics.
+
+func (pm *ProviderManager) GetProviderHealth() map[string]*ProviderHealth
+    GetProviderHealth returns the health status of all providers.
+
+func (pm *ProviderManager) SelectProvider(modelID string, excludeProviders []string) (providers.BaseLanguageModel, string, error)
+    SelectProvider selects the best available provider based on the
+    configuration.
+
+type ProviderManagerConfig struct {
+	// Health monitoring
+	HealthCheckInterval time.Duration
+	UnhealthyThreshold  int
+	RecoveryThreshold   int
+	HealthTimeout       time.Duration
+
+	// Load balancing
+	LoadBalanceStrategy   LoadBalanceStrategy
+	MaxConcurrentRequests int
+
+	// Response caching
+	EnableCaching bool
+	CacheTimeout  time.Duration
+	MaxCacheSize  int
+
+	// Failover
+	EnableFailover      bool
+	FailoverTimeout     time.Duration
+	MaxFailoverAttempts int
+}
+    ProviderManagerConfig configures the provider manager behavior.
+
+func DefaultProviderManagerConfig() *ProviderManagerConfig
+    DefaultProviderManagerConfig returns a default configuration.
+
+type ResponseCache struct {
+	// Has unexported fields.
+}
+    ResponseCache implements a simple in-memory response cache.
+
+func NewResponseCache(maxSize int, timeout time.Duration) *ResponseCache
+    NewResponseCache creates a new response cache.
+
+func (c *ResponseCache) Get(key string) *CacheableResponse
+    Get retrieves a cached response.
+
+func (c *ResponseCache) GetStats() map[string]interface{}
+    GetStats returns cache statistics.
+
+func (c *ResponseCache) Set(key string, response *CacheableResponse)
+    Set stores a response in the cache.
+
+type SchemaValidationResult struct {
+	Valid              bool              `json:"valid"`
+	ErrorCount         int               `json:"error_count"`
+	WarningCount       int               `json:"warning_count"`
+	ValidationErrors   []ValidationError `json:"validation_errors,omitempty"`
+	ValidationWarnings []ValidationError `json:"validation_warnings,omitempty"`
+	ValidationTime     time.Duration     `json:"validation_time"`
+}
+    SchemaValidationResult contains the results of schema validation.
+
+type ValidationError struct {
+	Field      string `json:"field"`
+	Value      string `json:"value"`
+	Constraint string `json:"constraint"`
+	Message    string `json:"message"`
+}
+    ValidationError represents a schema validation error.
+

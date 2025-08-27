@@ -1,0 +1,91 @@
+package logger // import "github.com/sehwan505/langextract-go/cmd/langextract/internal/logger"
+
+
+TYPES
+
+type Logger struct {
+	*logrus.Logger
+	// Has unexported fields.
+}
+    Logger provides structured logging capabilities for the CLI
+
+func NewLogger(level, format string) (*Logger, error)
+    NewLogger creates a new logger with the specified level and format
+
+func (l *Logger) Error(message string)
+    Error logs an error message with red color
+
+func (l *Logger) Fatal(message string)
+    Fatal logs a fatal message with red color and exits
+
+func (l *Logger) Progress(message string, current, total int)
+    Progress logs a progress message
+
+func (l *Logger) SetOutput(w io.Writer)
+    SetOutput sets the output destination for logs
+
+func (l *Logger) SetQuiet(quiet bool)
+    SetQuiet disables all log output except errors
+
+func (l *Logger) SetVerbose(verbose bool)
+    SetVerbose enables verbose logging (debug level)
+
+func (l *Logger) Success(message string)
+    Success logs a success message with green color
+
+func (l *Logger) Warning(message string)
+    Warning logs a warning message with yellow color
+
+func (l *Logger) WithCount(count int) *LoggerEntry
+    WithCount creates a logger with count context
+
+func (l *Logger) WithDuration(duration time.Duration) *logrus.Entry
+    WithDuration creates a logger with duration context
+
+func (l *Logger) WithError(err error) *logrus.Entry
+    WithError creates a logger with error context
+
+func (l *Logger) WithFile(filename string) *LoggerEntry
+    WithFile creates a logger with file context
+
+func (l *Logger) WithOperation(operation string) *LoggerEntry
+    WithOperation creates a logger with operation context
+
+func (l *Logger) WithProvider(provider string) *LoggerEntry
+    WithProvider creates a logger with provider context
+
+func (l *Logger) WithRequest(requestID string) *logrus.Entry
+    WithRequest creates a logger with request context
+
+type LoggerEntry struct {
+	*logrus.Entry
+	// Has unexported fields.
+}
+    LoggerEntry extends logrus.Entry with custom methods
+
+func (le *LoggerEntry) Success(message string)
+    Success logs a success message with green color
+
+func (le *LoggerEntry) WithCount(count int) *LoggerEntry
+    WithCount creates a logger entry with count context
+
+func (le *LoggerEntry) WithDuration(duration time.Duration) *LoggerEntry
+    WithDuration creates a logger entry with duration context
+
+func (le *LoggerEntry) WithFile(filename string) *LoggerEntry
+    WithFile creates a logger entry with file context
+
+func (le *LoggerEntry) WithProvider(provider string) *LoggerEntry
+    WithProvider creates a logger entry with provider context
+
+type TextFormatter struct {
+	ForceColors     bool
+	DisableColors   bool
+	FullTimestamp   bool
+	TimestampFormat string
+}
+    TextFormatter is a custom logrus formatter for human-readable output
+
+func (f *TextFormatter) Format(entry *logrus.Entry) ([]byte, error)
+    Format formats the log entry
+

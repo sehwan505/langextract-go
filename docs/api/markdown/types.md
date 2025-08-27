@@ -1,0 +1,128 @@
+# types
+
+Package: `github.com/sehwan505/langextract-go/pkg/types`
+
+```go
+package types // import "github.com/sehwan505/langextract-go/pkg/types"
+
+
+TYPES
+
+type AlignmentResult struct {
+	Status     AlignmentStatus // Quality of the alignment
+	Confidence float64         // Confidence score (0.0-1.0)
+	Score      float64         // Alignment score (algorithm-specific)
+	Method     string          // Name of the alignment method used
+}
+    AlignmentResult represents the result of an alignment operation.
+
+func NewAlignmentResult(status AlignmentStatus, confidence, score float64, method string) (*AlignmentResult, error)
+    NewAlignmentResult creates a new alignment result with validation.
+
+func (ar AlignmentResult) IsGoodAlignment() bool
+    IsGoodAlignment returns true if this represents a high-quality alignment.
+
+func (ar AlignmentResult) String() string
+    String returns a string representation of the alignment result.
+
+type AlignmentStatus int
+    AlignmentStatus represents the quality of alignment between extracted text
+    and the source text from which it was extracted.
+
+const (
+	// AlignmentNone indicates no alignment could be found
+	AlignmentNone AlignmentStatus = iota
+
+	// AlignmentExact indicates the extracted text matches exactly
+	AlignmentExact
+
+	// AlignmentFuzzy indicates a close but not exact match
+	AlignmentFuzzy
+
+	// AlignmentSemantic indicates a semantic match but different surface form
+	AlignmentSemantic
+
+	// AlignmentPartial indicates only part of the text could be aligned
+	AlignmentPartial
+
+	// AlignmentApproximate indicates a rough approximation of the location
+	AlignmentApproximate
+)
+func ParseAlignmentStatus(s string) (AlignmentStatus, error)
+    ParseAlignmentStatus parses a string into an AlignmentStatus.
+
+func (as AlignmentStatus) IsValid() bool
+    IsValid returns true if the alignment status is a known value.
+
+func (as AlignmentStatus) Quality() int
+    Quality returns a numeric score (0-100) representing the quality of
+    alignment. Higher scores indicate better alignment quality.
+
+func (as AlignmentStatus) String() string
+    String returns the string representation of the alignment status.
+
+type CharInterval struct {
+	StartPos int // Inclusive start position
+	EndPos   int // Exclusive end position
+}
+    CharInterval represents a character position range in text. StartPos is
+    inclusive, EndPos is exclusive, following Go's slice conventions.
+
+func NewCharInterval(start, end int) (*CharInterval, error)
+    NewCharInterval creates a new CharInterval with validation.
+
+func (ci CharInterval) Contains(pos int) bool
+    Contains checks if the given position is within this interval.
+
+func (ci CharInterval) Intersection(other CharInterval) *CharInterval
+    Intersection returns the overlapping portion of two intervals. Returns nil
+    if there is no overlap.
+
+func (ci CharInterval) IsEmpty() bool
+    IsEmpty returns true if the interval contains no characters.
+
+func (ci CharInterval) Length() int
+    Length returns the number of characters in the interval.
+
+func (ci CharInterval) Overlaps(other CharInterval) bool
+    Overlaps checks if this interval overlaps with another interval.
+
+func (ci CharInterval) String() string
+    String returns a string representation of the interval.
+
+func (ci CharInterval) Union(other CharInterval) CharInterval
+    Union returns the minimal interval that contains both intervals.
+
+type TokenInterval struct {
+	StartToken int // Inclusive start token index
+	EndToken   int // Exclusive end token index
+}
+    TokenInterval represents a token position range in tokenized text. Similar
+    to CharInterval but operates on token indices rather than characters.
+
+func NewTokenInterval(start, end int) (*TokenInterval, error)
+    NewTokenInterval creates a new TokenInterval with validation.
+
+func (ti TokenInterval) Contains(tokenIndex int) bool
+    Contains checks if the given token index is within this interval.
+
+func (ti TokenInterval) Intersection(other TokenInterval) *TokenInterval
+    Intersection returns the overlapping portion of two token intervals. Returns
+    nil if there is no overlap.
+
+func (ti TokenInterval) IsEmpty() bool
+    IsEmpty returns true if the interval contains no tokens.
+
+func (ti TokenInterval) Length() int
+    Length returns the number of tokens in the interval.
+
+func (ti TokenInterval) Overlaps(other TokenInterval) bool
+    Overlaps checks if this interval overlaps with another token interval.
+
+func (ti TokenInterval) String() string
+    String returns a string representation of the token interval.
+
+func (ti TokenInterval) Union(other TokenInterval) TokenInterval
+    Union returns the minimal interval that contains both token intervals.
+
+```

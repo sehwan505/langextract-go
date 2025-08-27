@@ -1,0 +1,261 @@
+# extraction
+
+Package: `github.com/sehwan505/langextract-go/pkg/extraction`
+
+```go
+package extraction // import "github.com/sehwan505/langextract-go/pkg/extraction"
+
+
+TYPES
+
+type BasicExtractionSchema struct {
+	Name         string             `json:"name"`
+	Description  string             `json:"description"`
+	Classes      []*ClassDefinition `json:"classes"`
+	GlobalFields []*FieldDefinition `json:"globalFields,omitempty"` // Fields available to all classes
+}
+    BasicExtractionSchema is a concrete implementation of ExtractionSchema.
+
+func NewBasicExtractionSchema(name, description string) *BasicExtractionSchema
+    NewBasicExtractionSchema creates a new basic extraction schema.
+
+func SchemaFromJSON(data []byte) (*BasicExtractionSchema, error)
+    FromJSON creates a schema from JSON bytes.
+
+func (s *BasicExtractionSchema) AddClass(class *ClassDefinition)
+    AddClass adds a class definition to the schema.
+
+func (s *BasicExtractionSchema) AddGlobalField(field *FieldDefinition)
+    AddGlobalField adds a global field definition to the schema.
+
+func (s *BasicExtractionSchema) GetClass(name string) *ClassDefinition
+    GetClass returns the class definition for the given name.
+
+func (s *BasicExtractionSchema) GetClasses() []string
+    GetClasses returns the list of extraction classes.
+
+func (s *BasicExtractionSchema) GetDescription() string
+    GetDescription returns the schema description.
+
+func (s *BasicExtractionSchema) GetName() string
+    GetName returns the schema name.
+
+func (s *BasicExtractionSchema) ToJSON() ([]byte, error)
+    ToJSON converts the schema to JSON format.
+
+func (s *BasicExtractionSchema) ToJSONSchema() (map[string]interface{}, error)
+    ToJSONSchema converts the schema to JSON Schema format.
+
+func (s *BasicExtractionSchema) ValidateExtraction(extraction *Extraction) error
+    ValidateExtraction validates an extraction against the schema.
+
+type ClassDefinition struct {
+	Name        string             `json:"name"`                  // Class name
+	Description string             `json:"description,omitempty"` // Class description
+	Fields      []*FieldDefinition `json:"fields,omitempty"`      // Custom fields for this class
+	Required    bool               `json:"required,omitempty"`    // Whether this class must appear
+	MinCount    *int               `json:"minCount,omitempty"`    // Minimum number of instances
+	MaxCount    *int               `json:"maxCount,omitempty"`    // Maximum number of instances
+}
+    ClassDefinition defines an extraction class with its constraints.
+
+type ExampleData struct {
+	Text        string                 `json:"text"`                  // Input text for the example
+	Extractions []*Extraction          `json:"extractions,omitempty"` // Expected extractions from the text
+	Metadata    map[string]interface{} `json:"metadata,omitempty"`    // Additional metadata about the example
+}
+    ExampleData represents a training example with input text and expected
+    extractions.
+
+func FromJSON(data []byte) (*ExampleData, error)
+    FromJSON creates ExampleData from JSON bytes.
+
+func NewExampleData(text string) *ExampleData
+    NewExampleData creates a new ExampleData with the given text.
+
+func NewExampleDataWithExtractions(text string, extractions []*Extraction) *ExampleData
+    NewExampleDataWithExtractions creates a new ExampleData with text and
+    extractions.
+
+func (ed *ExampleData) AddExtraction(extraction *Extraction)
+    AddExtraction adds an extraction to the example.
+
+func (ed *ExampleData) AddExtractions(extractions []*Extraction)
+    AddExtractions adds multiple extractions to the example.
+
+func (ed *ExampleData) Copy() *ExampleData
+    Copy creates a deep copy of the example data.
+
+func (ed *ExampleData) ExtractionCount() int
+    ExtractionCount returns the number of extractions in the example.
+
+func (ed *ExampleData) GetExtractionsByClass(class string) []*Extraction
+    GetExtractionsByClass returns all extractions of a specific class.
+
+func (ed *ExampleData) HasExtractions() bool
+    HasExtractions returns true if the example has any extractions.
+
+func (ed *ExampleData) Input() string
+    Input returns the input text (alias for Text for compatibility)
+
+func (ed *ExampleData) String() string
+    String returns a string representation of the example data.
+
+func (ed *ExampleData) ToJSON() ([]byte, error)
+    ToJSON converts the example data to JSON format.
+
+func (ed *ExampleData) Validate() error
+    Validate checks if the example data is valid.
+
+type Extraction struct {
+	ExtractionClass string                 `json:"extraction_class"`           // Type/category of the extraction
+	ExtractionText  string                 `json:"extraction_text"`            // The actual extracted text
+	CharInterval    *types.CharInterval    `json:"char_interval,omitempty"`    // Character position in source text
+	TokenInterval   *types.TokenInterval   `json:"token_interval,omitempty"`   // Token position in source text
+	AlignmentStatus *types.AlignmentStatus `json:"alignment_status,omitempty"` // Quality of source grounding
+	ExtractionIndex *int                   `json:"extraction_index,omitempty"` // Order in extraction results
+	GroupIndex      *int                   `json:"group_index,omitempty"`      // Grouping identifier
+	Description     *string                `json:"description,omitempty"`      // Human-readable description
+	Attributes      map[string]interface{} `json:"attributes,omitempty"`       // Additional metadata
+}
+    Extraction represents a single extracted entity from text with source
+    grounding.
+
+func NewExtraction(class, text string) *Extraction
+    NewExtraction creates a new Extraction with required fields.
+
+func NewExtractionWithInterval(class, text string, interval *types.CharInterval) *Extraction
+    NewExtractionWithInterval creates a new Extraction with character interval.
+
+func (e *Extraction) AddAttribute(key string, value interface{})
+    AddAttribute adds a key-value pair to the attributes map.
+
+func (e *Extraction) Class() string
+    Class returns the extraction class (alias for ExtractionClass for
+    compatibility)
+
+func (e *Extraction) Confidence() float64
+    Confidence returns the confidence score from attributes if available
+
+func (e *Extraction) Copy() *Extraction
+    Copy creates a deep copy of the extraction.
+
+func (e *Extraction) GetAttribute(key string) (interface{}, bool)
+    GetAttribute retrieves an attribute value by key.
+
+func (e *Extraction) GetConfidence() (float64, bool)
+    GetConfidence returns the confidence score if available in attributes.
+
+func (e *Extraction) GetFloatAttribute(key string) (float64, bool)
+    GetFloatAttribute retrieves a float64 attribute value by key.
+
+func (e *Extraction) GetIntAttribute(key string) (int, bool)
+    GetIntAttribute retrieves an integer attribute value by key.
+
+func (e *Extraction) GetStringAttribute(key string) (string, bool)
+    GetStringAttribute retrieves a string attribute value by key.
+
+func (e *Extraction) HasCharInterval() bool
+    HasCharInterval returns true if the extraction has character position
+    information.
+
+func (e *Extraction) HasTokenInterval() bool
+    HasTokenInterval returns true if the extraction has token position
+    information.
+
+func (e *Extraction) Interval() *types.CharInterval
+    Interval returns the character interval (alias for CharInterval for
+    compatibility)
+
+func (e *Extraction) IsEmpty() bool
+    IsEmpty returns true if the extraction text is empty.
+
+func (e *Extraction) IsWellGrounded() bool
+    IsWellGrounded returns true if the extraction has good source grounding.
+
+func (e *Extraction) Length() int
+    Length returns the character length of the extracted text.
+
+func (e *Extraction) SetAlignmentStatus(status types.AlignmentStatus)
+    SetAlignmentStatus sets the alignment status for this extraction.
+
+func (e *Extraction) SetCharInterval(interval *types.CharInterval)
+    SetCharInterval sets the character interval for this extraction.
+
+func (e *Extraction) SetConfidence(confidence float64)
+    SetConfidence sets the confidence score in attributes.
+
+func (e *Extraction) SetDescription(desc string)
+    SetDescription sets the description.
+
+func (e *Extraction) SetExtractionIndex(index int)
+    SetExtractionIndex sets the extraction index.
+
+func (e *Extraction) SetGroupIndex(index int)
+    SetGroupIndex sets the group index.
+
+func (e *Extraction) SetTokenInterval(interval *types.TokenInterval)
+    SetTokenInterval sets the token interval for this extraction.
+
+func (e *Extraction) String() string
+    String returns a string representation of the extraction.
+
+func (e *Extraction) Text() string
+    Text returns the extraction text (alias for ExtractionText for
+    compatibility)
+
+type ExtractionSchema interface {
+	// GetName returns the schema name/identifier
+	GetName() string
+
+	// GetDescription returns a human-readable description of the schema
+	GetDescription() string
+
+	// GetClasses returns the list of extraction classes supported by this schema
+	GetClasses() []string
+
+	// ValidateExtraction checks if an extraction conforms to this schema
+	ValidateExtraction(extraction *Extraction) error
+
+	// ToJSONSchema converts the schema to JSON Schema format for LLM prompts
+	ToJSONSchema() (map[string]interface{}, error)
+}
+    ExtractionSchema defines the structure and constraints for extractions.
+
+type ExtractionTask struct {
+	Schema      ExtractionSchema `json:"schema"`                // Schema defining expected extractions
+	Examples    []*ExampleData   `json:"examples,omitempty"`    // Few-shot learning examples
+	Prompt      string           `json:"prompt"`                // Base extraction prompt
+	Temperature float64          `json:"temperature,omitempty"` // LLM temperature setting
+	MaxTokens   int              `json:"max_tokens,omitempty"`  // Maximum tokens in response
+}
+    ExtractionTask combines a schema with examples and prompt information.
+
+func NewExtractionTask(schema ExtractionSchema, prompt string) *ExtractionTask
+    NewExtractionTask creates a new extraction task.
+
+func (task *ExtractionTask) AddExample(example *ExampleData)
+    AddExample adds an example to the task.
+
+func (task *ExtractionTask) String() string
+    String returns a string representation of the extraction task.
+
+func (task *ExtractionTask) Validate() error
+    Validate validates the extraction task.
+
+type FieldDefinition struct {
+	Name        string      `json:"name"`                  // Field name
+	Type        string      `json:"type"`                  // Data type (string, number, boolean, array)
+	Description string      `json:"description,omitempty"` // Field description
+	Required    bool        `json:"required,omitempty"`    // Whether field is required
+	Enum        []string    `json:"enum,omitempty"`        // Allowed values for enum types
+	Pattern     string      `json:"pattern,omitempty"`     // Regex pattern for string validation
+	MinLength   *int        `json:"minLength,omitempty"`   // Minimum string length
+	MaxLength   *int        `json:"maxLength,omitempty"`   // Maximum string length
+	Minimum     *float64    `json:"minimum,omitempty"`     // Minimum numeric value
+	Maximum     *float64    `json:"maximum,omitempty"`     // Maximum numeric value
+	Default     interface{} `json:"default,omitempty"`     // Default value
+}
+    FieldDefinition defines constraints for extraction fields.
+
+```

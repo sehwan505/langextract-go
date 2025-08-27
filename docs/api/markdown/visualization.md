@@ -1,0 +1,1166 @@
+# visualization
+
+Package: `github.com/sehwan505/langextract-go/internal/visualization`
+
+```go
+package visualization // import "github.com/sehwan505/langextract-go/internal/visualization"
+
+
+CONSTANTS
+
+const DefaultFallbackColor = "#FFFF8D"
+    DefaultFallbackColor is used when no other color is available
+
+const DefaultVisualizationCSS = `<style>
+.lx-highlight { 
+    position: relative; 
+    border-radius: 3px; 
+    padding: 1px 2px;
+}
+
+.lx-highlight .lx-tooltip {
+    visibility: hidden;
+    opacity: 0;
+    transition: opacity 0.2s ease-in-out;
+    background: #333;
+    color: #fff;
+    text-align: left;
+    border-radius: 4px;
+    padding: 6px 8px;
+    position: absolute;
+    z-index: 1000;
+    bottom: 125%;
+    left: 50%;
+    transform: translateX(-50%);
+    font-size: 12px;
+    max-width: 240px;
+    white-space: normal;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.3);
+}
+
+.lx-highlight:hover .lx-tooltip { 
+    visibility: visible; 
+    opacity: 1; 
+}
+
+.lx-animated-wrapper { 
+    max-width: 100%; 
+    font-family: Arial, sans-serif; 
+}
+
+.lx-controls {
+    background: #fafafa; 
+    border: 1px solid #90caf9; 
+    border-radius: 8px;
+    padding: 12px; 
+    margin-bottom: 16px;
+}
+
+.lx-button-row {
+    display: flex; 
+    justify-content: center; 
+    gap: 8px; 
+    margin-bottom: 12px;
+}
+
+.lx-control-btn {
+    background: #4285f4; 
+    color: white; 
+    border: none; 
+    border-radius: 4px;
+    padding: 8px 16px; 
+    cursor: pointer; 
+    font-size: 13px; 
+    font-weight: 500;
+    transition: background-color 0.2s;
+}
+
+.lx-control-btn:hover { 
+    background: #3367d6; 
+}
+
+.lx-control-btn:disabled {
+    background: #cccccc;
+    cursor: not-allowed;
+}
+
+.lx-progress-container {
+    margin-bottom: 8px;
+}
+
+.lx-progress-slider {
+    width: 100%; 
+    margin: 0; 
+    appearance: none; 
+    height: 6px;
+    background: #ddd; 
+    border-radius: 3px; 
+    outline: none;
+}
+
+.lx-progress-slider::-webkit-slider-thumb {
+    appearance: none; 
+    width: 18px; 
+    height: 18px; 
+    background: #4285f4;
+    border-radius: 50%; 
+    cursor: pointer;
+}
+
+.lx-progress-slider::-moz-range-thumb {
+    width: 18px; 
+    height: 18px; 
+    background: #4285f4; 
+    border-radius: 50%;
+    cursor: pointer; 
+    border: none;
+}
+
+.lx-status-text {
+    text-align: center; 
+    font-size: 12px; 
+    color: #666; 
+    margin-top: 4px;
+}
+
+.lx-text-window {
+    font-family: monospace; 
+    white-space: pre-wrap; 
+    border: 1px solid #90caf9;
+    padding: 12px; 
+    max-height: 260px; 
+    overflow-y: auto; 
+    margin-bottom: 12px;
+    line-height: 1.6;
+}
+
+.lx-attributes-panel {
+    background: #fafafa; 
+    border: 1px solid #90caf9; 
+    border-radius: 6px;
+    padding: 8px 10px; 
+    margin-top: 8px; 
+    font-size: 13px;
+}
+
+.lx-current-highlight {
+    border-bottom: 4px solid #ff4444;
+    font-weight: bold;
+    animation: lx-pulse 1s ease-in-out;
+}
+
+@keyframes lx-pulse {
+    0% { text-decoration-color: #ff4444; }
+    50% { text-decoration-color: #ff0000; }
+    100% { text-decoration-color: #ff4444; }
+}
+
+.lx-legend {
+    font-size: 12px; 
+    margin-bottom: 8px;
+    padding-bottom: 8px; 
+    border-bottom: 1px solid #e0e0e0;
+}
+
+.lx-label {
+    display: inline-block;
+    padding: 2px 4px;
+    border-radius: 3px;
+    margin-right: 4px;
+    color: #000;
+}
+
+.lx-attr-key {
+    font-weight: 600;
+    color: #1565c0;
+    letter-spacing: 0.3px;
+}
+
+.lx-attr-value {
+    font-weight: 400;
+    opacity: 0.85;
+    letter-spacing: 0.2px;
+}
+
+/* GIF optimizations with larger fonts and better readability */
+.lx-gif-optimized .lx-text-window { 
+    font-size: 16px; 
+    line-height: 1.8; 
+}
+
+.lx-gif-optimized .lx-attributes-panel { 
+    font-size: 15px; 
+}
+
+.lx-gif-optimized .lx-current-highlight { 
+    text-decoration-thickness: 4px; 
+}
+
+/* Responsive design adjustments */
+@media (max-width: 768px) {
+    .lx-animated-wrapper {
+        font-size: 14px;
+    }
+    
+    .lx-button-row {
+        flex-direction: column;
+        gap: 4px;
+    }
+    
+    .lx-control-btn {
+        font-size: 12px;
+        padding: 6px 12px;
+    }
+    
+    .lx-text-window {
+        max-height: 200px;
+        font-size: 12px;
+    }
+}
+
+/* Print styles */
+@media print {
+    .lx-controls {
+        display: none;
+    }
+    
+    .lx-text-window {
+        max-height: none;
+        border: none;
+        overflow: visible;
+    }
+    
+    .lx-highlight {
+        border: 1px solid #333;
+    }
+}
+
+/* Dark mode support */
+@media (prefers-color-scheme: dark) {
+    .lx-animated-wrapper {
+        color: #ffffff;
+    }
+    
+    .lx-controls, .lx-attributes-panel {
+        background: #2d2d2d;
+        border-color: #555555;
+        color: #ffffff;
+    }
+    
+    .lx-text-window {
+        background: #1e1e1e;
+        border-color: #555555;
+        color: #ffffff;
+    }
+    
+    .lx-status-text {
+        color: #cccccc;
+    }
+    
+    .lx-legend {
+        border-bottom-color: #555555;
+    }
+    
+    .lx-progress-slider {
+        background: #555555;
+    }
+}
+
+/* Accessibility improvements */
+.lx-highlight:focus {
+    outline: 2px solid #4285f4;
+    outline-offset: 2px;
+}
+
+.lx-control-btn:focus {
+    outline: 2px solid #ffffff;
+    outline-offset: 2px;
+}
+
+/* Animation controls for reduced motion preference */
+@media (prefers-reduced-motion: reduce) {
+    .lx-current-highlight {
+        animation: none;
+    }
+    
+    .lx-highlight .lx-tooltip {
+        transition: none;
+    }
+}
+
+/* High contrast mode support */
+@media (prefers-contrast: high) {
+    .lx-highlight {
+        border: 2px solid #000000;
+    }
+    
+    .lx-control-btn {
+        border: 2px solid #000000;
+    }
+    
+    .lx-text-window, .lx-controls, .lx-attributes-panel {
+        border: 2px solid #000000;
+    }
+}
+</style>`
+    DefaultVisualizationCSS contains the CSS styles for HTML visualizations
+    Based on the Python langextract reference implementation
+
+const MinimalVisualizationCSS = `<style>
+.lx-highlight { 
+    position: relative; 
+    border-radius: 2px; 
+    padding: 1px;
+}
+
+.lx-animated-wrapper { 
+    font-family: Arial, sans-serif; 
+}
+
+.lx-text-window {
+    font-family: monospace; 
+    white-space: pre-wrap; 
+    border: 1px solid #ccc;
+    padding: 8px; 
+    margin-bottom: 8px;
+}
+
+.lx-legend {
+    font-size: 12px; 
+    margin-bottom: 4px;
+    padding-bottom: 4px; 
+    border-bottom: 1px solid #e0e0e0;
+}
+
+.lx-label {
+    display: inline-block;
+    padding: 1px 3px;
+    border-radius: 2px;
+    margin-right: 3px;
+    color: #000;
+}
+</style>`
+    MinimalVisualizationCSS provides a minimal CSS for lightweight
+    visualizations
+
+const PrintVisualizationCSS = `<style>
+@media print {
+    .lx-animated-wrapper {
+        font-family: serif;
+    }
+    
+    .lx-highlight {
+        border: 1px solid #000;
+        padding: 0;
+    }
+    
+    .lx-text-window {
+        border: 1px solid #000;
+        max-height: none;
+        overflow: visible;
+    }
+    
+    .lx-legend {
+        page-break-inside: avoid;
+    }
+    
+    .lx-label {
+        border: 1px solid #000;
+        background: none !important;
+    }
+}
+</style>`
+    PrintVisualizationCSS provides CSS optimized for printing
+
+
+VARIABLES
+
+var DefaultColorPalette = []string{
+	"#D2E3FC",
+	"#C8E6C9",
+	"#FEF0C3",
+	"#F9DEDC",
+	"#FFDDBE",
+	"#EADDFF",
+	"#C4E9E4",
+	"#FCE4EC",
+	"#E8EAED",
+	"#DDE8E8",
+}
+    DefaultColorPalette is the default color palette based on Google's Material
+    Design colors Matches the Python reference implementation palette
+
+var DefaultTemplateRegistry = NewTemplateRegistry()
+    DefaultTemplateRegistry is the default global template registry
+
+var DefaultVisualizationRegistry = NewVisualizationRegistry()
+    DefaultVisualizationRegistry is the default global visualization registry
+
+
+FUNCTIONS
+
+func GetVisualizationCSS(opts *VisualizationOptions) string
+    GetVisualizationCSS returns the appropriate CSS based on options
+
+func IsColorError(err error) bool
+    IsColorError checks if the error is a color error
+
+func IsDataProcessingError(err error) bool
+    IsDataProcessingError checks if the error is a data processing error
+
+func IsExportError(err error) bool
+    IsExportError checks if the error is an export error
+
+func IsHTMLGenerationError(err error) bool
+    IsHTMLGenerationError checks if the error is an HTML generation error
+
+func IsRenderingError(err error) bool
+    IsRenderingError checks if the error is a rendering error
+
+func IsTemplateError(err error) bool
+    IsTemplateError checks if the error is a template error
+
+func IsValidationError(err error) bool
+    IsValidationError checks if the error is a validation error
+
+func RegisterRenderer(name string, renderer TemplateRenderer) error
+    RegisterRenderer registers a renderer with the default registry
+
+func RegisterVisualizer(name string, visualizer Visualizer) error
+    RegisterVisualizer registers a visualizer with the default registry
+
+
+TYPES
+
+type CSVExporter struct {
+	// Has unexported fields.
+}
+    CSVExporter implements the Exporter interface for CSV format
+
+func NewCSVExporter(opts *ExportOptions) *CSVExporter
+    NewCSVExporter creates a new CSV exporter
+
+func (e *CSVExporter) Export(ctx context.Context, doc *document.AnnotatedDocument, opts *ExportOptions) ([]byte, error)
+    Export exports an annotated document to CSV format
+
+func (e *CSVExporter) ExportSummary(ctx context.Context, doc *document.AnnotatedDocument, opts *ExportOptions) ([]byte, error)
+    ExportSummary exports a summary CSV with aggregated statistics
+
+func (e *CSVExporter) ExportToString(ctx context.Context, doc *document.AnnotatedDocument, opts *ExportOptions) (string, error)
+    ExportToString exports a document to a CSV string
+
+func (e *CSVExporter) ExportWithCustomHeaders(ctx context.Context, doc *document.AnnotatedDocument, headers []string, opts *ExportOptions) ([]byte, error)
+    ExportWithCustomHeaders exports with custom column headers
+
+func (e *CSVExporter) GetFormat() OutputFormat
+    GetFormat returns the output format this exporter handles
+
+func (e *CSVExporter) GetMIMEType() string
+    GetMIMEType returns the MIME type for CSV
+
+func (e *CSVExporter) Name() string
+    Name returns the name of the exporter
+
+type ClassStatistic struct {
+	Class string
+	Count int
+}
+
+type ColorError struct {
+	*VisualizationError
+}
+    ColorError represents color assignment errors
+
+func NewColorError(message string, details map[string]interface{}) *ColorError
+    NewColorError creates a new color error
+
+type ColorManager interface {
+	// AssignColors assigns colors to extraction classes
+	AssignColors(extractions []*extraction.Extraction) map[string]string
+
+	// GetColor returns the color for a specific class
+	GetColor(class string) string
+
+	// GetPalette returns the color palette being used
+	GetPalette() []string
+
+	// SetPalette sets a custom color palette
+	SetPalette(palette []string)
+}
+    ColorManager defines the interface for managing extraction class colors
+
+type DataProcessingError struct {
+	*VisualizationError
+}
+    DataProcessingError represents data processing errors
+
+func NewDataProcessingError(message string, cause error) *DataProcessingError
+    NewDataProcessingError creates a new data processing error
+
+type DefaultColorManager struct {
+	// Has unexported fields.
+}
+    DefaultColorManager implements the ColorManager interface
+
+func NewColorManagerWithPalette(palette []string) *DefaultColorManager
+    NewColorManagerWithPalette creates a color manager with a custom palette
+
+func NewDefaultColorManager() *DefaultColorManager
+    NewDefaultColorManager creates a new default color manager
+
+func (cm *DefaultColorManager) AssignColors(extractions []*extraction.Extraction) map[string]string
+    AssignColors assigns colors to extraction classes based on the extractions
+    provided
+
+func (cm *DefaultColorManager) ClearAssignments()
+    ClearAssignments clears all color assignments
+
+func (cm *DefaultColorManager) GetAssignments() map[string]string
+    GetAssignments returns a copy of current class-to-color assignments
+
+func (cm *DefaultColorManager) GetColor(class string) string
+    GetColor returns the color for a specific class
+
+func (cm *DefaultColorManager) GetPalette() []string
+    GetPalette returns a copy of the current color palette
+
+func (cm *DefaultColorManager) SetColorForClass(class, color string) error
+    SetColorForClass manually sets a color for a specific class
+
+func (cm *DefaultColorManager) SetPalette(palette []string)
+    SetPalette sets a new color palette and resets assignments
+
+type DefaultTemplateRenderer struct {
+	// Has unexported fields.
+}
+    DefaultTemplateRenderer implements the TemplateRenderer interface using Go's
+    html/template
+
+func NewDefaultTemplateRenderer() *DefaultTemplateRenderer
+    NewDefaultTemplateRenderer creates a new default template renderer
+
+func (r *DefaultTemplateRenderer) GetAvailableTemplates() []string
+    GetAvailableTemplates returns all available template names
+
+func (r *DefaultTemplateRenderer) GetFunctions() map[string]interface{}
+    GetFunctions returns all registered functions
+
+func (r *DefaultTemplateRenderer) GetTemplate(name string) (string, error)
+    GetTemplate returns a template by name
+
+func (r *DefaultTemplateRenderer) RegisterFunction(name string, fn interface{}) error
+    RegisterFunction registers a custom function for use in templates
+
+func (r *DefaultTemplateRenderer) RegisterTemplate(name string, content string) error
+    RegisterTemplate registers a new template
+
+func (r *DefaultTemplateRenderer) Render(ctx context.Context, templateName string, data interface{}) (string, error)
+    Render renders a template with the given data
+
+type DefaultVisualizer struct {
+	// Has unexported fields.
+}
+    DefaultVisualizer is the main visualizer that orchestrates different
+    generators and exporters
+
+func NewDefaultVisualizer(opts *VisualizationOptions) *DefaultVisualizer
+    NewDefaultVisualizer creates a new default visualizer with all exporters
+
+func (v *DefaultVisualizer) Export(ctx context.Context, doc *document.AnnotatedDocument, format OutputFormat, opts *ExportOptions) ([]byte, error)
+    Export exports a document using the specified exporter
+
+func (v *DefaultVisualizer) Generate(ctx context.Context, doc *document.AnnotatedDocument, opts *VisualizationOptions) (string, error)
+    Generate creates a visualization from an annotated document
+
+func (v *DefaultVisualizer) GetColorManager() ColorManager
+    GetColorManager returns the color manager
+
+func (v *DefaultVisualizer) GetExporter(format OutputFormat) (Exporter, error)
+    GetExporter returns an exporter for the specified format
+
+func (v *DefaultVisualizer) GetOptions() *VisualizationOptions
+    GetOptions returns a copy of the current options
+
+func (v *DefaultVisualizer) GetSupportedFormats() []OutputFormat
+    GetSupportedFormats returns all supported formats
+
+func (v *DefaultVisualizer) Name() string
+    Name returns the name of the visualizer
+
+func (v *DefaultVisualizer) SetColorManager(colorManager ColorManager) error
+    SetColorManager sets a custom color manager
+
+func (v *DefaultVisualizer) UpdateOptions(opts *VisualizationOptions) error
+    UpdateOptions updates the visualizer options
+
+func (v *DefaultVisualizer) Validate() error
+    Validate validates the visualizer configuration
+
+type ExportError struct {
+	*VisualizationError
+}
+    ExportError represents data export errors
+
+func NewExportError(message string, format OutputFormat, cause error) *ExportError
+    NewExportError creates a new export error
+
+type ExportOptions struct {
+	// Format specifies the output format
+	Format OutputFormat `json:"format"`
+
+	// IncludeText controls whether to include the full document text
+	IncludeText bool `json:"include_text"`
+
+	// IncludeMetadata controls whether to include extraction metadata
+	IncludeMetadata bool `json:"include_metadata"`
+
+	// IncludeAttributes controls whether to include extraction attributes
+	IncludeAttributes bool `json:"include_attributes"`
+
+	// IncludePositions controls whether to include character positions
+	IncludePositions bool `json:"include_positions"`
+
+	// Pretty controls pretty-printing for structured formats
+	Pretty bool `json:"pretty"`
+
+	// CSVDelimiter specifies the delimiter for CSV format
+	CSVDelimiter string `json:"csv_delimiter,omitempty"`
+
+	// CSVHeaders specifies custom headers for CSV format
+	CSVHeaders []string `json:"csv_headers,omitempty"`
+
+	// FilterClasses allows filtering to specific extraction classes
+	FilterClasses []string `json:"filter_classes,omitempty"`
+
+	// SortBy specifies the field to sort by
+	SortBy string `json:"sort_by,omitempty"`
+
+	// SortOrder specifies ascending or descending sort
+	SortOrder SortOrder `json:"sort_order,omitempty"`
+}
+    ExportOptions contains options for exporting documents
+
+func DefaultExportOptions() *ExportOptions
+    DefaultExportOptions returns default export options
+
+func (opts *ExportOptions) Validate() error
+    Validate validates the export options
+
+func (opts *ExportOptions) WithCSVDelimiter(delimiter string) *ExportOptions
+    WithCSVDelimiter sets the CSV delimiter
+
+func (opts *ExportOptions) WithFilterClasses(classes []string) *ExportOptions
+    WithFilterClasses sets the classes to filter
+
+func (opts *ExportOptions) WithFormat(format OutputFormat) *ExportOptions
+    WithFormat sets the export format
+
+func (opts *ExportOptions) WithPretty(pretty bool) *ExportOptions
+    WithPretty sets pretty printing
+
+type Exporter interface {
+	// Export exports an annotated document to the specified format
+	Export(ctx context.Context, doc *document.AnnotatedDocument, opts *ExportOptions) ([]byte, error)
+
+	// GetFormat returns the output format this exporter handles
+	GetFormat() OutputFormat
+
+	// GetMIMEType returns the MIME type for the exported format
+	GetMIMEType() string
+
+	// Name returns the name of the exporter
+	Name() string
+}
+    Exporter defines the interface for exporting annotated documents to
+    different formats
+
+type ExtractionData struct {
+	// Index is the extraction index
+	Index int `json:"index"`
+
+	// Class is the extraction class
+	Class string `json:"class"`
+
+	// Text is the extracted text
+	Text string `json:"text"`
+
+	// Color is the assigned color for this class
+	Color string `json:"color"`
+
+	// StartPos is the start character position
+	StartPos int `json:"start_pos"`
+
+	// EndPos is the end character position
+	EndPos int `json:"end_pos"`
+
+	// BeforeText is the context text before the extraction
+	BeforeText string `json:"before_text"`
+
+	// ExtractionText is the extracted text (HTML-escaped)
+	ExtractionText string `json:"extraction_text"`
+
+	// AfterText is the context text after the extraction
+	AfterText string `json:"after_text"`
+
+	// AttributesHTML is the HTML representation of attributes
+	AttributesHTML string `json:"attributes_html"`
+
+	// Confidence is the extraction confidence score
+	Confidence float64 `json:"confidence,omitempty"`
+
+	// Metadata contains additional extraction metadata
+	Metadata map[string]interface{} `json:"metadata,omitempty"`
+}
+    ExtractionData represents processed extraction data for visualization
+
+type ExtractionStatistics struct {
+	TotalExtractions  int            `json:"total_extractions"`
+	UniqueClasses     int            `json:"unique_classes"`
+	ClassCounts       map[string]int `json:"class_counts"`
+	AverageLength     float64        `json:"average_length"`
+	AverageConfidence float64        `json:"average_confidence,omitempty"`
+	TextCoverage      float64        `json:"text_coverage,omitempty"`
+	Overlaps          int            `json:"overlaps,omitempty"`
+	Gaps              int            `json:"gaps,omitempty"`
+}
+    ExtractionStatistics provides statistics about the extractions
+
+type HTMLGenerationError struct {
+	*VisualizationError
+}
+    HTMLGenerationError represents HTML generation errors
+
+func NewHTMLGenerationError(message string, cause error) *HTMLGenerationError
+    NewHTMLGenerationError creates a new HTML generation error
+
+type HTMLGenerator struct {
+	// Has unexported fields.
+}
+    HTMLGenerator generates interactive HTML visualizations
+
+func NewHTMLGenerator(opts *VisualizationOptions) *HTMLGenerator
+    NewHTMLGenerator creates a new HTML generator
+
+func NewHTMLGeneratorWithColorManager(colorManager ColorManager, opts *VisualizationOptions) *HTMLGenerator
+    NewHTMLGeneratorWithColorManager creates an HTML generator with a custom
+    color manager
+
+func (g *HTMLGenerator) Generate(ctx context.Context, doc *document.AnnotatedDocument, opts *VisualizationOptions) (string, error)
+    Generate creates an HTML visualization from an annotated document
+
+func (g *HTMLGenerator) GetSupportedFormats() []OutputFormat
+    GetSupportedFormats returns the formats this visualizer supports
+
+func (g *HTMLGenerator) Name() string
+    Name returns the name of the visualizer
+
+func (g *HTMLGenerator) Validate() error
+    Validate validates the HTML generator configuration
+
+type HTMLTemplateVariables struct {
+	// CSS contains the CSS styles
+	CSS string
+
+	// Title is the document title
+	Title string
+
+	// HighlightedText is the text with HTML highlighting
+	HighlightedText string
+
+	// LegendHTML is the legend showing class colors
+	LegendHTML string
+
+	// ExtractionData is the JavaScript data for extractions
+	ExtractionData string
+
+	// AnimationSpeed is the animation speed in seconds
+	AnimationSpeed float64
+
+	// ExtractionCount is the total number of extractions
+	ExtractionCount int
+
+	// FirstExtractionPos is the position info for the first extraction
+	FirstExtractionPos string
+
+	// GIFOptimized indicates if GIF optimizations should be applied
+	GIFOptimized bool
+
+	// ShowControls indicates if animation controls should be shown
+	ShowControls bool
+
+	// CustomJavaScript contains any custom JavaScript code
+	CustomJavaScript string
+}
+    HTMLTemplateVariables contains placeholders used in HTML templates
+
+type JSONExportData struct {
+	Format          string                 `json:"format"`
+	Version         string                 `json:"version"`
+	Timestamp       string                 `json:"timestamp"`
+	Text            string                 `json:"text,omitempty"`
+	TextLength      int                    `json:"text_length,omitempty"`
+	Extractions     []JSONExtractionData   `json:"extractions"`
+	ExtractionCount int                    `json:"extraction_count"`
+	Statistics      *ExtractionStatistics  `json:"statistics,omitempty"`
+	Metadata        map[string]interface{} `json:"metadata,omitempty"`
+}
+    JSONExportData represents the structure of exported JSON data
+
+type JSONExporter struct {
+	// Has unexported fields.
+}
+    JSONExporter implements the Exporter interface for JSON format
+
+func NewJSONExporter(opts *ExportOptions) *JSONExporter
+    NewJSONExporter creates a new JSON exporter
+
+func (e *JSONExporter) Export(ctx context.Context, doc *document.AnnotatedDocument, opts *ExportOptions) ([]byte, error)
+    Export exports an annotated document to JSON format
+
+func (e *JSONExporter) ExportToFile(ctx context.Context, doc *document.AnnotatedDocument, filename string, opts *ExportOptions) error
+    ExportToFile exports a document to a JSON file
+
+func (e *JSONExporter) ExportToString(ctx context.Context, doc *document.AnnotatedDocument, opts *ExportOptions) (string, error)
+    ExportToString exports a document to a JSON string
+
+func (e *JSONExporter) GetFormat() OutputFormat
+    GetFormat returns the output format this exporter handles
+
+func (e *JSONExporter) GetMIMEType() string
+    GetMIMEType returns the MIME type for JSON
+
+func (e *JSONExporter) Name() string
+    Name returns the name of the exporter
+
+type JSONExtractionData struct {
+	Index      int                    `json:"index,omitempty"`
+	Text       string                 `json:"text"`
+	Class      string                 `json:"class"`
+	StartPos   int                    `json:"start_pos,omitempty"`
+	EndPos     int                    `json:"end_pos,omitempty"`
+	Length     int                    `json:"length,omitempty"`
+	Confidence float64                `json:"confidence,omitempty"`
+	Attributes map[string]interface{} `json:"attributes,omitempty"`
+	Metadata   map[string]interface{} `json:"metadata,omitempty"`
+}
+    JSONExtractionData represents an extraction in JSON format
+
+type MarkdownExporter struct {
+	// Has unexported fields.
+}
+    MarkdownExporter implements the Exporter interface for Markdown format
+
+func NewMarkdownExporter(opts *ExportOptions) *MarkdownExporter
+    NewMarkdownExporter creates a new Markdown exporter
+
+func (e *MarkdownExporter) Export(ctx context.Context, doc *document.AnnotatedDocument, opts *ExportOptions) ([]byte, error)
+    Export exports an annotated document to Markdown format
+
+func (e *MarkdownExporter) ExportToString(ctx context.Context, doc *document.AnnotatedDocument, opts *ExportOptions) (string, error)
+    ExportToString exports a document to a Markdown string
+
+func (e *MarkdownExporter) GetFormat() OutputFormat
+    GetFormat returns the output format this exporter handles
+
+func (e *MarkdownExporter) GetMIMEType() string
+    GetMIMEType returns the MIME type for Markdown
+
+func (e *MarkdownExporter) Name() string
+    Name returns the name of the exporter
+
+type OutputFormat string
+    OutputFormat represents supported visualization output formats
+
+const (
+	// OutputFormatHTML generates interactive HTML visualization
+	OutputFormatHTML OutputFormat = "html"
+
+	// OutputFormatJSON exports structured JSON with metadata
+	OutputFormatJSON OutputFormat = "json"
+
+	// OutputFormatCSV exports tabular CSV data
+	OutputFormatCSV OutputFormat = "csv"
+
+	// OutputFormatMarkdown exports human-readable Markdown
+	OutputFormatMarkdown OutputFormat = "markdown"
+
+	// OutputFormatPlainText exports simple text format
+	OutputFormatPlainText OutputFormat = "text"
+)
+func (f OutputFormat) GetMIMEType() string
+    GetMIMEType returns the MIME type for the output format
+
+func (f OutputFormat) IsValid() bool
+    IsValid checks if the output format is valid
+
+func (f OutputFormat) String() string
+    String returns the string representation of the output format
+
+type RenderingError struct {
+	*VisualizationError
+}
+    RenderingError represents template rendering errors
+
+func NewRenderingError(message string, cause error) *RenderingError
+    NewRenderingError creates a new rendering error
+
+type SimpleTemplateRenderer struct {
+	// Has unexported fields.
+}
+    SimpleTemplateRenderer is a minimal template renderer for basic string
+    replacement
+
+func NewSimpleTemplateRenderer() *SimpleTemplateRenderer
+    NewSimpleTemplateRenderer creates a new simple template renderer
+
+func (r *SimpleTemplateRenderer) GetAvailableTemplates() []string
+    GetAvailableTemplates returns all available template names
+
+func (r *SimpleTemplateRenderer) GetFunctions() map[string]interface{}
+    GetFunctions returns an empty map as functions are not supported
+
+func (r *SimpleTemplateRenderer) GetTemplate(name string) (string, error)
+    GetTemplate returns a template by name
+
+func (r *SimpleTemplateRenderer) RegisterFunction(name string, fn interface{}) error
+    RegisterFunction is not supported by SimpleTemplateRenderer
+
+func (r *SimpleTemplateRenderer) RegisterTemplate(name string, content string) error
+    RegisterTemplate registers a new template
+
+func (r *SimpleTemplateRenderer) Render(ctx context.Context, templateName string, data interface{}) (string, error)
+    Render renders a template using simple string replacement
+
+type SortOrder string
+    SortOrder represents sort order options
+
+const (
+	// SortOrderAsc sorts in ascending order
+	SortOrderAsc SortOrder = "asc"
+
+	// SortOrderDesc sorts in descending order
+	SortOrderDesc SortOrder = "desc"
+)
+type SpanPoint struct {
+	// Position is the character position in the text
+	Position int `json:"position"`
+
+	// TagType indicates whether this is a start or end tag
+	TagType TagType `json:"tag_type"`
+
+	// SpanIndex is the index of the span for HTML data attributes
+	SpanIndex int `json:"span_index"`
+
+	// Extraction is the associated extraction data
+	Extraction *extraction.Extraction `json:"extraction"`
+}
+    SpanPoint represents a span boundary point for HTML generation
+
+type StaticColorManager struct {
+	// Has unexported fields.
+}
+    StaticColorManager is a simple implementation that uses a fixed color
+    mapping
+
+func NewStaticColorManager(assignments map[string]string) *StaticColorManager
+    NewStaticColorManager creates a static color manager with predefined
+    assignments
+
+func (cm *StaticColorManager) AssignColors(extractions []*extraction.Extraction) map[string]string
+    AssignColors returns the predefined color assignments
+
+func (cm *StaticColorManager) GetColor(class string) string
+    GetColor returns the color for a specific class
+
+func (cm *StaticColorManager) GetFallbackColor() string
+    GetFallbackColor returns the current fallback color
+
+func (cm *StaticColorManager) GetPalette() []string
+    GetPalette returns the colors from the static assignments
+
+func (cm *StaticColorManager) SetFallbackColor(color string)
+    SetFallbackColor sets the fallback color for unknown classes
+
+func (cm *StaticColorManager) SetPalette(palette []string)
+    SetPalette is not supported by StaticColorManager
+
+type TagType string
+    TagType represents span boundary tag types
+
+const (
+	// TagTypeStart indicates a span start tag
+	TagTypeStart TagType = "start"
+
+	// TagTypeEnd indicates a span end tag
+	TagTypeEnd TagType = "end"
+)
+type TemplateError struct {
+	*VisualizationError
+}
+    TemplateError represents template-related errors
+
+func NewTemplateError(templateName, message string, cause error) *TemplateError
+    NewTemplateError creates a new template error
+
+type TemplateRegistry struct {
+	// Has unexported fields.
+}
+    TemplateRegistry provides a centralized registry for templates
+
+func NewTemplateRegistry() *TemplateRegistry
+    NewTemplateRegistry creates a new template registry
+
+func (r *TemplateRegistry) GetAvailableRenderers() []string
+    GetAvailableRenderers returns all available renderer names
+
+func (r *TemplateRegistry) GetRenderer(name string) (TemplateRenderer, error)
+    GetRenderer returns a template renderer by name
+
+func (r *TemplateRegistry) RegisterRenderer(name string, renderer TemplateRenderer) error
+    RegisterRenderer registers a template renderer
+
+type TemplateRenderer interface {
+	// Render renders a template with the given data
+	Render(ctx context.Context, templateName string, data interface{}) (string, error)
+
+	// RegisterTemplate registers a new template
+	RegisterTemplate(name string, content string) error
+
+	// GetTemplate returns a template by name
+	GetTemplate(name string) (string, error)
+
+	// GetAvailableTemplates returns all available template names
+	GetAvailableTemplates() []string
+}
+    TemplateRenderer defines the interface for rendering visualization templates
+
+func GetDefaultRenderer() TemplateRenderer
+    GetDefaultRenderer returns the default template renderer
+
+func GetRenderer(name string) (TemplateRenderer, error)
+    GetRenderer returns a renderer from the default registry
+
+type ValidationError struct {
+	*VisualizationError
+}
+    ValidationError represents validation-related visualization errors
+
+func NewValidationError(message string, details map[string]interface{}) *ValidationError
+    NewValidationError creates a new validation error
+
+type VisualizationError struct {
+	Operation string                 `json:"operation"`
+	Message   string                 `json:"message"`
+	Details   map[string]interface{} `json:"details,omitempty"`
+	Cause     error                  `json:"-"`
+}
+    VisualizationError represents a base error type for visualization operations
+
+func (e *VisualizationError) Error() string
+    Error implements the error interface
+
+func (e *VisualizationError) Unwrap() error
+    Unwrap returns the wrapped error
+
+type VisualizationOptions struct {
+	// Format specifies the output format
+	Format OutputFormat `json:"format"`
+
+	// ShowLegend controls whether to show the class color legend
+	ShowLegend bool `json:"show_legend"`
+
+	// AnimationSpeed controls the speed of animations (HTML only)
+	AnimationSpeed float64 `json:"animation_speed,omitempty"`
+
+	// GIFOptimized applies optimizations for GIF creation (HTML only)
+	GIFOptimized bool `json:"gif_optimized,omitempty"`
+
+	// ContextChars specifies the number of context characters to show around extractions
+	ContextChars int `json:"context_chars,omitempty"`
+
+	// MaxTextLength limits the length of text to display
+	MaxTextLength int `json:"max_text_length,omitempty"`
+
+	// CustomColors allows overriding the default color palette
+	CustomColors map[string]string `json:"custom_colors,omitempty"`
+
+	// TemplateOverrides allows overriding default templates
+	TemplateOverrides map[string]string `json:"template_overrides,omitempty"`
+
+	// IncludeMetadata controls whether to include extraction metadata
+	IncludeMetadata bool `json:"include_metadata"`
+
+	// SortExtractions controls whether to sort extractions by position
+	SortExtractions bool `json:"sort_extractions"`
+
+	// FilterClasses allows filtering to specific extraction classes
+	FilterClasses []string `json:"filter_classes,omitempty"`
+
+	// Debug enables debug mode for troubleshooting
+	Debug bool `json:"debug,omitempty"`
+}
+    VisualizationOptions contains options for generating visualizations
+
+func DefaultVisualizationOptions() *VisualizationOptions
+    DefaultVisualizationOptions returns default visualization options
+
+func (opts *VisualizationOptions) Validate() error
+    Validate validates the visualization options
+
+func (opts *VisualizationOptions) WithAnimationSpeed(speed float64) *VisualizationOptions
+    WithAnimationSpeed sets the animation speed
+
+func (opts *VisualizationOptions) WithContextChars(chars int) *VisualizationOptions
+    WithContextChars sets the number of context characters
+
+func (opts *VisualizationOptions) WithCustomColors(colors map[string]string) *VisualizationOptions
+    WithCustomColors sets custom colors for extraction classes
+
+func (opts *VisualizationOptions) WithDebug(debug bool) *VisualizationOptions
+    WithDebug enables debug mode
+
+func (opts *VisualizationOptions) WithFormat(format OutputFormat) *VisualizationOptions
+    WithFormat sets the output format
+
+func (opts *VisualizationOptions) WithShowLegend(show bool) *VisualizationOptions
+    WithShowLegend sets whether to show the legend
+
+type VisualizationRegistry struct {
+	// Has unexported fields.
+}
+    VisualizationRegistry provides a centralized registry for visualizers
+
+func NewVisualizationRegistry() *VisualizationRegistry
+    NewVisualizationRegistry creates a new visualization registry
+
+func (r *VisualizationRegistry) GetAvailableVisualizers() []string
+    GetAvailableVisualizers returns all available visualizer names
+
+func (r *VisualizationRegistry) GetVisualizer(name string) (Visualizer, error)
+    GetVisualizer returns a visualizer by name
+
+func (r *VisualizationRegistry) RegisterVisualizer(name string, visualizer Visualizer) error
+    RegisterVisualizer registers a visualizer
+
+type Visualizer interface {
+	// Generate creates a visualization from an annotated document
+	Generate(ctx context.Context, doc *document.AnnotatedDocument, opts *VisualizationOptions) (string, error)
+
+	// GetSupportedFormats returns the formats this visualizer supports
+	GetSupportedFormats() []OutputFormat
+
+	// Name returns the name of the visualizer
+	Name() string
+
+	// Validate validates the visualizer configuration
+	Validate() error
+}
+    Visualizer defines the main interface for generating visualizations
+
+func GetDefaultVisualizer() Visualizer
+    GetDefaultVisualizer returns the default visualizer
+
+func GetVisualizer(name string) (Visualizer, error)
+    GetVisualizer returns a visualizer from the default registry
+
+```
