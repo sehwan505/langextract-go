@@ -514,7 +514,7 @@ func (s *SchemaAwareExampleSelector) deduplicateExamples(examples []*extraction.
 
 	for _, example := range examples {
 		// Create a simple hash of the example
-		hash := fmt.Sprintf("%s_%d", example.Input, len(example.Extractions))
+		hash := fmt.Sprintf("%s_%d", example.Input(), len(example.Extractions))
 		if !seen[hash] {
 			seen[hash] = true
 			unique = append(unique, example)
