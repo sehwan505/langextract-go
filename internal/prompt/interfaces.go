@@ -128,6 +128,9 @@ type PromptContext struct {
 	
 	// Timestamp is when the prompt was generated
 	Timestamp int64 `json:"timestamp"`
+	
+	// OutputFormat specifies the desired output format (JSON, XML, etc.)
+	OutputFormat string `json:"output_format"`
 }
 
 // PromptOptions contains configuration options for prompt builders

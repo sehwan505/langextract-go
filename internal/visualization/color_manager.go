@@ -42,11 +42,16 @@ type DefaultColorManager struct {
 
 // NewDefaultColorManager creates a new default color manager
 func NewDefaultColorManager() *DefaultColorManager {
-	return &DefaultColorManager{
+	cm := &DefaultColorManager{
 		palette:     make([]string, len(DefaultColorPalette)),
 		assignments: make(map[string]string),
 		cycleIndex:  0,
 	}
+	
+	// Copy default palette to avoid external modifications
+	copy(cm.palette, DefaultColorPalette)
+	
+	return cm
 }
 
 // NewColorManagerWithPalette creates a color manager with a custom palette
@@ -76,7 +81,7 @@ func (cm *DefaultColorManager) AssignColors(extractions []*extraction.Extraction
 	// Extract unique classes from valid extractions
 	classSet := make(map[string]bool)
 	for _, ext := range extractions {
-		if ext != nil && ext.Class() != "" && ext.Interval() != nil {
+		if ext != nil && ext.Class() != "" {
 			classSet[ext.Class()] = true
 		}
 	}

@@ -1,13 +1,10 @@
 package integration_test
 
 import (
-	"context"
 	"testing"
-	"time"
 
 	"github.com/sehwan505/langextract-go/pkg/document"
 	"github.com/sehwan505/langextract-go/pkg/extraction"
-	"github.com/sehwan505/langextract-go/pkg/providers"
 )
 
 // TestBasicExtractionPipeline demonstrates a full extraction pipeline integration test
@@ -21,17 +18,25 @@ func TestBasicExtractionPipeline(t *testing.T) {
 	text := "John Doe is a software engineer at Acme Corp. He can be reached at john@acme.com."
 	doc := document.NewDocument(text)
 
+	// Create extraction schema
+	schema := extraction.NewBasicExtractionSchema("test_extraction", "Test extraction for person names and emails")
+	schema.AddClass(&extraction.ClassDefinition{
+		Name:        "person",
+		Description: "Person name",
+	})
+	schema.AddClass(&extraction.ClassDefinition{
+		Name:        "email",
+		Description: "Email address",
+	})
+
 	// Create extraction task
-	task := &extraction.ExtractionTask{
-		Description: "Extract person names and email addresses",
-		// In a real test, you would add examples and schema here
-	}
+	task := extraction.NewExtractionTask(schema, "Extract person names and email addresses")
 
 	// TODO: This test will be implemented once the main extraction engine is built
 	// For now, it serves as a template for future integration tests
 
 	t.Logf("Created document with %d characters", doc.Length())
-	t.Logf("Created extraction task: %s", task.Description)
+	t.Logf("Created extraction task with schema: %s", task.Prompt)
 
 	// Integration tests should test the complete flow:
 	// 1. Document creation and preprocessing

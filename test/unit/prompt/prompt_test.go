@@ -399,12 +399,14 @@ func TestExampleManager(t *testing.T) {
 			"description": "Test examples",
 			"examples": [
 				{
-					"input": "John Smith works at Google.",
+					"text": "John Smith works at Google.",
 					"extractions": [
 						{
-							"text": "John Smith",
-							"class": "person",
-							"confidence": 0.95
+							"extraction_text": "John Smith",
+							"extraction_class": "person",
+							"attributes": {
+								"confidence": 0.95
+							}
 						}
 					]
 				}

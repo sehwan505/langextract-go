@@ -11,7 +11,6 @@ import (
 	"github.com/sehwan505/langextract-go/pkg/extraction"
 	"github.com/sehwan505/langextract-go/pkg/langextract"
 	"github.com/sehwan505/langextract-go/pkg/providers"
-	"github.com/sehwan505/langextract-go/pkg/types"
 )
 
 // TestExtractWithSchemaConstraints tests extraction with schema system integration
@@ -118,12 +117,12 @@ func TestExtractWithSchemaConstraints(t *testing.T) {
 				WithModelID(tc.modelID).
 				WithPromptDescription("Extract medical conditions").
 				WithExamples(examples).
-				WithUseSchemaConstraints(tc.useSchemaConstraints).
+				WithValidation(tc.useSchemaConstraints).
 				WithTimeout(30 * time.Second)
 
 			// If using schema constraints, add the schema
 			if tc.useSchemaConstraints {
-				options.WithExtractionSchema(schema)
+				options.WithSchema(schema)
 			}
 
 			// Run extraction
@@ -132,7 +131,8 @@ func TestExtractWithSchemaConstraints(t *testing.T) {
 			ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
 			defer cancel()
 
-			result, err := langextract.Extract(ctx, testDoc, options)
+			options.WithContext(ctx)
+			result, err := langextract.Extract(testDoc, options)
 			if err != nil {
 				// For integration tests, we might expect some failures due to API limits
 				if strings.Contains(err.Error(), "rate limit") || 
@@ -148,10 +148,10 @@ func TestExtractWithSchemaConstraints(t *testing.T) {
 			}
 
 			// Verify result is an AnnotatedDocument
-			annotated, ok := result.(*document.AnnotatedDocument)
-			if !ok {
-				t.Fatalf("Extract() returned %T, want *document.AnnotatedDocument", result)
+			if result == nil {
+				t.Fatal("Extract() returned nil result")
 			}
+			annotated := result
 
 			// Basic validation of results
 			if annotated.Text != testDoc.Text {
@@ -201,24 +201,24 @@ func TestExtractWithMockProvider(t *testing.T) {
 	// Create extraction options with mock provider
 	options := langextract.NewExtractOptions().
 		WithModelID("mock-model").
-		WithProvider("mock").
 		WithPromptDescription("Extract conditions").
-		WithExtractionSchema(schema).
-		WithUseSchemaConstraints(true)
+		WithSchema(schema).
+		WithValidation(true)
 
 	// Test extraction
 	testDoc := document.NewDocument("Patient has hypertension")
 	
 	ctx := context.Background()
-	result, err := langextract.ExtractWithRegistry(ctx, testDoc, options, registry)
+	options.WithContext(ctx)
+	result, err := langextract.Extract(testDoc, options)
 	if err != nil {
 		t.Fatalf("Extract() error = %v", err)
 	}
 
-	annotated, ok := result.(*document.AnnotatedDocument)
-	if !ok {
-		t.Fatalf("Extract() returned %T, want *document.AnnotatedDocument", result)
+	if result == nil {
+		t.Fatal("Extract() returned nil result")
 	}
+	annotated := result
 
 	// Verify extractions
 	if len(annotated.Extractions) != 1 {
@@ -286,14 +286,15 @@ func TestExtractWithDifferentDocumentTypes(t *testing.T) {
 			options := langextract.NewExtractOptions().
 				WithModelID(modelID).
 				WithPromptDescription("Extract person and location entities").
-				WithExtractionSchema(schema).
-				WithUseSchemaConstraints(true).
+				WithSchema(schema).
+				WithValidation(true).
 				WithTimeout(30 * time.Second)
 
 			ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
 			defer cancel()
 
-			result, err := langextract.Extract(ctx, tc.document, options)
+			options.WithContext(ctx)
+			result, err := langextract.Extract(tc.document, options)
 			if err != nil {
 				if isAPILimitError(err) {
 					t.Skipf("Skipping due to API limitation: %v", err)
@@ -308,10 +309,10 @@ func TestExtractWithDifferentDocumentTypes(t *testing.T) {
 			}
 
 			// Basic validation
-			annotated, ok := result.(*document.AnnotatedDocument)
-			if !ok {
-				t.Fatalf("Result is not AnnotatedDocument: %T", result)
+			if result == nil {
+				t.Fatal("Result is nil")
 			}
+			annotated := result
 
 			if annotated.Text == "" {
 				t.Error("AnnotatedDocument has empty text")
@@ -348,8 +349,8 @@ func TestExtractWithBatchProcessing(t *testing.T) {
 	options := langextract.NewExtractOptions().
 		WithModelID(modelID).
 		WithPromptDescription("Extract medical entities").
-		WithExtractionSchema(schema).
-		WithUseSchemaConstraints(true).
+		WithSchema(schema).
+		WithValidation(true).
 		WithTimeout(60 * time.Second)
 
 	ctx, cancel := context.WithTimeout(context.Background(), 60*time.Second)
@@ -358,7 +359,8 @@ func TestExtractWithBatchProcessing(t *testing.T) {
 	// Process documents in batch
 	results := make([]*document.AnnotatedDocument, len(documents))
 	for i, doc := range documents {
-		result, err := langextract.Extract(ctx, doc, options)
+		options.WithContext(ctx)
+		result, err := langextract.Extract(doc, options)
 		if err != nil {
 			if isAPILimitError(err) {
 				t.Skipf("Skipping batch test due to API limitation: %v", err)
@@ -367,11 +369,11 @@ func TestExtractWithBatchProcessing(t *testing.T) {
 			continue
 		}
 
-		annotated, ok := result.(*document.AnnotatedDocument)
-		if !ok {
-			t.Errorf("Document %d: expected AnnotatedDocument, got %T", i, result)
+		if result == nil {
+			t.Errorf("Document %d: result is nil", i)
 			continue
 		}
+		annotated := result
 
 		results[i] = annotated
 	}
@@ -439,7 +441,10 @@ func TestExtractWithErrorHandling(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			ctx := context.Background()
-			result, err := langextract.Extract(ctx, tt.document, tt.options)
+			if tt.options != nil {
+				tt.options.WithContext(ctx)
+			}
+			result, err := langextract.Extract(tt.document, tt.options)
 
 			if tt.expectError {
 				if err == nil {
@@ -572,7 +577,7 @@ func getTypeName(v interface{}) string {
 	if v == nil {
 		return "nil"
 	}
-	switch v := v.(type) {
+	switch v.(type) {
 	case *document.AnnotatedDocument:
 		return "*document.AnnotatedDocument"
 	case *document.Document:

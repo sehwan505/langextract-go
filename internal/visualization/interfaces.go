@@ -368,7 +368,8 @@ func (opts *VisualizationOptions) Validate() error {
 		})
 	}
 	
-	if opts.AnimationSpeed < 0.1 || opts.AnimationSpeed > 10.0 {
+	// Only validate animation speed if it's been set (non-zero)
+	if opts.AnimationSpeed != 0.0 && (opts.AnimationSpeed < 0.1 || opts.AnimationSpeed > 10.0) {
 		return NewValidationError("animation speed must be between 0.1 and 10.0 seconds", map[string]interface{}{
 			"animation_speed": opts.AnimationSpeed,
 		})

@@ -318,10 +318,13 @@ func TestOllamaProviderParseOutput(t *testing.T) {
 			"base_url": "http://localhost:11434",
 		})
 	
-	// Create provider without checking availability for unit testing
-	provider := &providers.OllamaProvider{
-		Config:  config,
-		BaseURL: "http://localhost:11434",
+	// Create provider using constructor
+	provider, err := providers.NewOllamaProvider(config)
+	if err != nil {
+		if strings.Contains(err.Error(), "Ollama server is not available") {
+			t.Skip("Ollama server not available - skipping test")
+		}
+		t.Fatalf("Failed to create OllamaProvider: %v", err)
 	}
 	
 	// Test JSON parsing
@@ -456,6 +459,10 @@ func TestEnvironmentVariableHandling(t *testing.T) {
 			}
 
 			if err != nil {
+				// Skip Ollama tests if server is not available
+				if strings.Contains(tt.modelID, "llama") && strings.Contains(err.Error(), "Ollama server is not available") {
+					t.Skipf("Ollama server not available - skipping test: %v", err)
+				}
 				t.Fatalf("CreateModelFromEnv() error = %v, wantErr %v", err, tt.wantErr)
 			}
 
@@ -576,6 +583,10 @@ func TestProviderConfigurationOptions(t *testing.T) {
 			}
 
 			if err != nil {
+				// Skip Ollama tests if server is not available
+				if tt.expectProvider == "ollama" && strings.Contains(err.Error(), "Ollama server is not available") {
+					t.Skipf("Ollama server not available - skipping test: %v", err)
+				}
 				t.Errorf("CreateModel() error = %v, wantErr %v", err, tt.wantErr)
 				return
 			}
@@ -701,3 +712,4 @@ func TestConcurrentProviderCreation(t *testing.T) {
 	for err := range errors {
 		t.Errorf("Concurrent creation error: %v", err)
 	}
+}

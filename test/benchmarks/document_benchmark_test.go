@@ -9,7 +9,6 @@ import (
 
 	"github.com/sehwan505/langextract-go/pkg/document"
 	"github.com/sehwan505/langextract-go/pkg/extraction"
-	"github.com/sehwan505/langextract-go/pkg/langextract"
 	"github.com/sehwan505/langextract-go/pkg/providers"
 	"github.com/sehwan505/langextract-go/pkg/types"
 )
@@ -174,7 +173,9 @@ func BenchmarkAnnotatedDocumentCreation(b *testing.B) {
 	
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
-		_ = document.NewAnnotatedDocument(baseDoc, extractions)
+		annotatedDoc := document.NewAnnotatedDocument(baseDoc)
+		annotatedDoc.AddExtractions(extractions)
+		_ = annotatedDoc
 	}
 }
 

@@ -17,37 +17,44 @@ func createTestDocument() *document.AnnotatedDocument {
 	text := "John Smith works at Google Inc. He lives in San Francisco, California."
 	
 	// Create test extractions
+	interval1, _ := types.NewCharInterval(0, 10)
+	interval2, _ := types.NewCharInterval(20, 31)
+	interval3, _ := types.NewCharInterval(44, 57)
+	interval4, _ := types.NewCharInterval(59, 69)
+	
 	extractions := []*extraction.Extraction{
 		extraction.NewExtractionWithInterval(
-			"John Smith", 
 			"PERSON", 
-			types.NewCharInterval(0, 10),
+			"John Smith", 
+			interval1,
 		),
 		extraction.NewExtractionWithInterval(
-			"Google Inc.", 
 			"ORGANIZATION", 
-			types.NewCharInterval(20, 31),
+			"Google Inc.", 
+			interval2,
 		),
 		extraction.NewExtractionWithInterval(
+			"LOCATION", 
 			"San Francisco", 
-			"LOCATION", 
-			types.NewCharInterval(46, 59),
+			interval3,
 		),
 		extraction.NewExtractionWithInterval(
-			"California", 
 			"LOCATION", 
-			types.NewCharInterval(61, 71),
+			"California", 
+			interval4,
 		),
 	}
 	
-	doc := document.NewDocumentFromText(text)
-	return document.NewAnnotatedDocument(doc, extractions)
+	doc := document.NewDocument(text)
+	annotatedDoc := document.NewAnnotatedDocument(doc)
+	annotatedDoc.AddExtractions(extractions)
+	return annotatedDoc
 }
 
 func createEmptyDocument() *document.AnnotatedDocument {
 	text := "This is a simple text without any extractions."
-	doc := document.NewDocumentFromText(text)
-	return document.NewAnnotatedDocument(doc, nil)
+	doc := document.NewDocument(text)
+	return document.NewAnnotatedDocument(doc)
 }
 
 // HTMLGenerator Tests
@@ -405,7 +412,14 @@ func TestDefaultColorManager_AssignColors(t *testing.T) {
 	doc := createTestDocument()
 	colorManager := visualization.NewDefaultColorManager()
 	
-	colors := colorManager.AssignColors(doc.Extractions())
+	colors := colorManager.AssignColors(doc.Extractions)
+	
+	// Debug: print what we got
+	t.Logf("Number of extractions: %d", len(doc.Extractions))
+	for i, ext := range doc.Extractions {
+		t.Logf("Extraction %d: class='%s', text='%s'", i, ext.Class(), ext.Text())
+	}
+	t.Logf("Colors assigned: %+v", colors)
 	
 	// Should have colors for all unique classes
 	expectedClasses := []string{"PERSON", "ORGANIZATION", "LOCATION"}

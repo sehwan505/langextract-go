@@ -117,6 +117,7 @@ Examples:
 	cmd.AddCommand(NewProvidersTestCommand(cfg, log, opts))
 	cmd.AddCommand(NewProvidersConfigCommand(cfg, log, opts))
 	cmd.AddCommand(NewProvidersInstallCommand(cfg, log, opts))
+	cmd.AddCommand(NewProvidersUninstallCommand(cfg, log, opts))
 
 	return cmd
 }
@@ -256,45 +257,55 @@ Examples:
 func NewProvidersInstallCommand(cfg *config.GlobalConfig, log *logger.Logger, opts *ProvidersOptions) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "install [provider]",
-		Short: "Install or uninstall provider plugins",
-		Long: `Install or uninstall language model provider plugins. This allows adding
+		Short: "Install provider plugins",
+		Long: `Install language model provider plugins. This allows adding
 support for additional providers beyond the built-in ones.
 
 Examples:
   # Install a provider plugin
   langextract providers install custom-provider
   
-  # Uninstall a provider plugin
-  langextract providers uninstall custom-provider
-  
   # Force reinstall
   langextract providers install custom-provider --force`,
 		Args: cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			opts.Provider = args[0]
+			opts.Operation = "install" // Explicitly set operation
 			return runProvidersInstall(cmd.Context(), opts, cfg, log)
 		},
 	}
 
 	// Installation flags
 	cmd.Flags().StringVar(&opts.InstallDir, "install-dir", "", "Installation directory")
-	cmd.Flags().BoolVar(&opts.Force, "force", opts.Force, "Force installation/uninstallation")
+	cmd.Flags().BoolVar(&opts.Force, "force", opts.Force, "Force installation")
 
-	// Add uninstall alias
-	uninstallCmd := &cobra.Command{
+	return cmd
+}
+
+// NewProvidersUninstallCommand creates the providers uninstall subcommand
+func NewProvidersUninstallCommand(cfg *config.GlobalConfig, log *logger.Logger, opts *ProvidersOptions) *cobra.Command {
+	cmd := &cobra.Command{
 		Use:   "uninstall [provider]",
-		Short: "Uninstall provider plugin",
-		Args:  cobra.ExactArgs(1),
+		Short: "Uninstall provider plugins",
+		Long: `Uninstall language model provider plugins. This removes previously
+installed provider plugins from the system.
+
+Examples:
+  # Uninstall a provider plugin
+  langextract providers uninstall custom-provider
+  
+  # Force uninstall
+  langextract providers uninstall custom-provider --force`,
+		Args: cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			opts.Provider = args[0]
-			opts.Operation = "uninstall"
+			opts.Operation = "uninstall" // Explicitly set operation
 			return runProvidersInstall(cmd.Context(), opts, cfg, log)
 		},
 	}
-	uninstallCmd.Flags().BoolVar(&opts.Force, "force", opts.Force, "Force uninstallation")
 
-	// Add both install and uninstall as separate commands
-	cmd.Parent().AddCommand(uninstallCmd)
+	// Uninstallation flags
+	cmd.Flags().BoolVar(&opts.Force, "force", opts.Force, "Force uninstallation")
 
 	return cmd
 }

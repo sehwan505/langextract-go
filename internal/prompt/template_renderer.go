@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"fmt"
+	"reflect"
 	"strings"
 	"text/template"
 
@@ -40,15 +41,15 @@ func (r *DefaultTemplateRenderer) registerDefaultFunctions() {
 	}
 
 	r.functions["len"] = func(v interface{}) int {
-		switch val := v.(type) {
-		case string:
-			return len(val)
-		case []interface{}:
-			return len(val)
-		case []*extraction.ExampleData:
-			return len(val)
-		case []*extraction.Extraction:
-			return len(val)
+		if v == nil {
+			return 0
+		}
+		
+		// Use reflection to handle any slice, array, map, or string
+		rv := reflect.ValueOf(v)
+		switch rv.Kind() {
+		case reflect.String, reflect.Slice, reflect.Array, reflect.Map, reflect.Chan:
+			return rv.Len()
 		default:
 			return 0
 		}

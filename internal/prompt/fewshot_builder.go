@@ -102,6 +102,7 @@ func (b *FewShotPromptBuilder) BuildPromptWithExamples(ctx context.Context, task
 		TextLength:   len(text),
 		ExampleCount: len(selectedExamples),
 		Timestamp:    getCurrentTimestamp(),
+		OutputFormat: b.options.OutputFormat,
 	}
 
 	// Render the prompt
@@ -241,7 +242,7 @@ func (b *FewShotPromptBuilder) buildExamplesSection() string {
 
 {{range $i, $example := .Examples}}Example {{add $i 1}}:
 Input: {{$example.Input}}
-Output: {{formatExample $example .OutputFormat}}
+Output: {{formatExample $example $.OutputFormat}}
 
 {{end}}{{end}}`
 }
